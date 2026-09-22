@@ -424,7 +424,7 @@ function txt(s,x,y,size,color,align,alpha){
 function button(x,y,w,h,label,cb,opts){
   opts=opts||{};
   const dis=opts.disabled;
-  const cl=consumeClick();
+  const cl=opts.cl!==undefined?opts.cl:consumeClick();
   const hov=cl&&cl.x>=x&&cl.x<=x+w&&cl.y>=y&&cl.y<=y+h;
   ctx.save();
   ctx.fillStyle=dis?'#2a2a3a':(opts.color||'#274b73');
@@ -495,6 +495,7 @@ function drawTitle(dt){
 function drawHub(dt){
   drawStars(dt);
   txt('SQUADRON HUB',W/2,18,40,'#ffd94d','center');
+  const hubClick=consumeClick(); // one click per frame, shared by every region
   // stage cards
   for(let i=0;i<4;i++){
     const x=70+i*215,y=80,w=190,h=120;
@@ -509,7 +510,7 @@ function drawHub(dt){
     else if(best){txt('GRADE '+best.grade,x+12,y+78,20,GRADE_COL[best.grade]);
       txt('best '+best.score,x+12,y+100,13,'#7d809a');}
     else txt('NEW!',x+12,y+84,18,'#9be15d');
-    const cl=consumeClick();
+    const cl=hubClick;
     if(cl&&cl.x>=x&&cl.x<=x+w&&cl.y>=y&&cl.y<=y+h){
       if(locked){sfx.denied();}else{sfx.select();G.selStage=i;}
     }
@@ -523,7 +524,7 @@ function drawHub(dt){
     if(un){ctx.drawImage(SPR['hero_'+hk+'_0'],x+s/2-13,y+8);
       txt(hd.name,x+s/2,y+s-22,14,'#fff','center');}
     else{txt('🔒',x+s/2,y+18,30,'#555','center');txt('rescue',x+s/2,y+s-22,12,'#555','center');}
-    const cl=consumeClick();
+    const cl=hubClick;
     if(cl&&cl.x>=x&&cl.x<=x+s&&cl.y>=y&&cl.y<=y+s&&un){sfx.select();save.hero=hk;store();}
   });
   // ships
@@ -535,13 +536,14 @@ function drawHub(dt){
     if(un){ctx.drawImage(SPR['ship_'+sk],x+s/2-23,y+12);
       txt(sd.name,x+s/2,y+s-22,14,'#fff','center');}
     else{txt('🔒',x+s/2,y+18,30,'#555','center');txt('stage '+(sd.unlockStage+1),x+s/2,y+s-22,12,'#555','center');}
-    const cl=consumeClick();
+    const cl=hubClick;
     if(cl&&cl.x>=x&&cl.x<=x+s&&cl.y>=y&&cl.y<=y+s&&un){sfx.select();save.ship=sk;store();}
   });
   button(W/2-130,470,260,52,'▶ START MISSION',()=>{
     startStage(G.selStage);
-  },{fs:22,color:'#2a6e3a'});
-  button(20,480,110,40,'🔊/🔇',()=>{setMuted(!save.muted);},{fs:18});
+  },{fs:22,color:'#2a6e3a',cl:hubClick});
+  button(20,480,110,40,'🔊/🔇',()=>{setMuted(!save.muted);},{fs:18,cl:hubClick});
+  if(pressed['enter']||pressed[' '])startStage(G.selStage);
   txt('touch: left side = stick · buttons on right',W/2,528,13,'#555','center');
 }
 function drawStageClear(dt){
