@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Verdant Quest</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+  :root{
+    color-scheme:light dark;
+    --page:#d6d7c4; --ink:#202a22; --shell:#404b43; --shell-hi:#59665b;
+    --screen:#9bbc0f; --screen-dark:#0f380f; --accent:#b64151; --button:#2e3430;
+    --note:#f2f0dc; --shadow:rgba(18,24,20,.28);
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --page:#161a17; --ink:#edf1df; --shell:#313a34; --shell-hi:#475249;
+    --note:#272e28; --shadow:rgba(0,0,0,.55);
+  }}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;overscroll-behavior:none}
+  body{background:var(--page);color:var(--ink);font-family:"VT323",monospace;display:grid;place-items:center;padding:14px 12px calc(18px + env(safe-area-inset-bottom));}
+  .console{width:min(100%,590px);background:var(--shell);padding:16px 16px 20px;border-radius:18px 18px 48px 18px;box-shadow:0 18px 50px var(--shadow),inset 0 2px 0 var(--shell-hi),inset 0 -3px 0 #232b26;position:relative}
+  .screen-bezel{background:#1f2822;padding:12px 12px 9px;border-radius:12px 12px 28px 12px;box-shadow:inset 0 2px 8px #0008}
+  .screen-wrap{position:relative;aspect-ratio:10/9;max-height:65vh;margin:auto;background:#0f380f;overflow:hidden;touch-action:none}
+  canvas{width:100%;height:100%;display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+  .scanlines{position:absolute;inset:0;pointer-events:none;opacity:.12;background:repeating-linear-gradient(0deg,transparent 0 3px,#0f380f 3px 4px)}
+  .top-tools{display:flex;align-items:center;justify-content:space-between;margin-top:7px;color:#a9b4aa;font:18px "VT323",monospace;letter-spacing:.04em}
+  .power{display:flex;align-items:center;gap:6px}.power::before{content:"";width:7px;height:7px;border-radius:50%;background:#b8d62f;box-shadow:0 0 7px #b8d62f}
+  .sound{border:0;background:transparent;color:inherit;font:inherit;padding:0 4px;cursor:pointer;min-height:26px}
+  .controls{display:grid;grid-template-columns:154px 1fr 158px;align-items:center;gap:10px;margin-top:18px;user-select:none;touch-action:none}
+  .dpad{position:relative;width:146px;height:146px;justify-self:start}
+  .dkey{position:absolute;border:0;background:#252b27;color:#909990;display:grid;place-items:center;box-shadow:inset 0 2px 2px #ffffff18,inset 0 -4px 2px #0007;touch-action:none}
+  .dkey:active,.dkey.pressed{background:#171c18;transform:translateY(2px)}
+  .up,.down{left:49px;width:48px;height:52px}.up{top:0;border-radius:8px 8px 0 0}.down{bottom:0;border-radius:0 0 8px 8px}
+  .left,.right{top:49px;width:52px;height:48px}.left{left:0;border-radius:8px 0 0 8px}.right{right:0;border-radius:0 8px 8px 0}
+  .center{left:49px;top:49px;width:48px;height:48px;position:absolute;background:#252b27;box-shadow:inset 0 0 10px #0006}
+  .arrow{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:9px solid #111813;opacity:.7}.down .arrow{transform:rotate(180deg)}.left .arrow{transform:rotate(-90deg)}.right .arrow{transform:rotate(90deg)}
+  .meta{align-self:end;text-align:center;color:#a9b4aa;font-size:17px;line-height:1.05}.meta b{display:block;color:#d8ddd5;font-size:20px;font-weight:400}
+  .ab{height:116px;position:relative;transform:rotate(-17deg)}
+  .action{position:absolute;width:64px;height:64px;border:0;border-radius:50%;background:var(--accent);color:#f5dce0;font:30px "VT323",monospace;box-shadow:inset 0 3px 3px #ffffff2b,inset 0 -5px 3px #691e2a,0 4px 0 #202622;touch-action:none}
+  .action:active,.action.pressed{transform:translateY(3px);box-shadow:inset 0 2px 4px #0008,0 1px 0 #202622}
+  .btn-a{right:0;top:0}.btn-b{left:5px;bottom:0}.ab-label{position:absolute;color:#bec6be;font:19px "VT323";transform:rotate(17deg)}
+  .label-a{right:19px;bottom:2px}.label-b{left:27px;top:-1px}
+  .start-overlay,.end-overlay{position:absolute;inset:0;background:#0f380f;color:#9bbc0f;display:flex;align-items:center;justify-content:center;text-align:center;padding:25px;z-index:4}
+  .start-card h1,.end-card h2{font:20px/1.55 "Press Start 2P",monospace;margin:0 0 18px;text-shadow:2px 2px #306230;letter-spacing:-1px}
+  .start-card p,.end-card p{font:20px/1.15 "VT323",monospace;margin:7px 0;color:#8bac0f}
+  .start-btn{margin-top:18px;padding:11px 15px;border:3px solid #9bbc0f;background:#306230;color:#d5e781;font:12px "Press Start 2P";cursor:pointer;box-shadow:4px 4px 0 #081f08}
+  .start-btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #081f08}
+  .hidden{display:none!important}
+  .legend{width:min(100%,590px);display:flex;justify-content:center;gap:18px;color:var(--ink);opacity:.72;font-size:18px;margin-top:10px;text-align:center}
+  @media(max-width:520px){
+    body{padding:7px 6px calc(9px + env(safe-area-inset-bottom));align-content:start}
+    .console{padding:9px 9px 13px;border-radius:13px 13px 35px 13px}
+    .screen-bezel{padding:8px 8px 5px}.top-tools{font-size:15px;margin-top:4px}
+    .controls{grid-template-columns:128px 1fr 130px;margin-top:10px;gap:4px}
+    .dpad{width:122px;height:122px}.up,.down{left:41px;width:40px;height:44px}.left,.right{top:41px;width:44px;height:40px}.center{left:41px;top:41px;width:40px;height:40px}
+    .action{width:56px;height:56px}.ab{height:104px}.ab-label{font-size:17px}.meta{font-size:14px}.meta b{font-size:16px}
+    .start-card h1,.end-card h2{font-size:16px}.start-card p,.end-card p{font-size:18px}.legend{display:none}
+  }
+  @media(max-width:370px){.controls{grid-template-columns:110px 1fr 112px}.dpad{transform:scale(.86);transform-origin:left center}.ab{transform:rotate(-17deg) scale(.9);transform-origin:right center}.meta{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+  <section class="console" aria-label="Verdant Quest game console">
+    <div class="screen-bezel">
+      <div class="screen-wrap" id="screenWrap">
+        <canvas id="game" width="320" height="288" aria-label="Top-down pixel adventure game"></canvas>
+        <div class="scanlines"></div>
+        <div class="start-overlay" id="startOverlay">
+          <div class="start-card">
+            <h1>VERDANT<br>QUEST</h1>
+            <p>Three sunshards wake the ancient grove.</p>
+            <p>Move · Explore · Fight</p>
+            <button class="start-btn" id="startBtn">BEGIN QUEST</button>
+          </div>
+        </div>
+        <div class="end-overlay hidden" id="endOverlay"><div class="end-card"><h2 id="endTitle">THE GROVE<br>AWAKENS</h2><p id="endText"></p><button class="start-btn" id="againBtn">PLAY AGAIN</button></div></div>
+      </div>
+      <div class="top-tools"><span class="power">POWER</span><span>DOT MATRIX × SOUL</span><button class="sound" id="soundBtn" aria-label="Toggle sound">♪ ON</button></div>
+    </div>
+    <div class="controls" aria-label="Game controls">
+      <div class="dpad">
+        <button class="dkey up" data-key="ArrowUp" aria-label="Move up"><span class="arrow"></span></button>
+        <button class="dkey left" data-key="ArrowLeft" aria-label="Move left"><span class="arrow"></span></button>
+        <span class="center"></span>
+        <button class="dkey right" data-key="ArrowRight" aria-label="Move right"><span class="arrow"></span></button>
+        <button class="dkey down" data-key="ArrowDown" aria-label="Move down"><span class="arrow"></span></button>
+      </div>
+      <div class="meta"><b>SELECT</b>Find 3 shards<br><b>START</b>Wake the grove</div>
+      <div class="ab">
+        <button class="action btn-a" data-key="KeyJ" aria-label="Sword attack">A</button><span class="ab-label label-a">DASH</span>
+        <button class="action btn-b" data-key="KeyK" aria-label="Dash">B</button><span class="ab-label label-b">SWORD</span>
+      </div>
+    </div>
+  </section>
+  <div class="legend"><span>Move: arrows / WASD</span><span>Sword: J / Z</span><span>Dash: K / X</span></div>
+</main>
+<script>
+(()=>{
+const cvs=document.getElementById('game'),ctx=cvs.getContext('2d');ctx.imageSmoothingEnabled=false;
+const W=320,H=288,T=16,C={a:'#0f380f',b:'#306230',c:'#8bac0f',d:'#9bbc0f'};
+let running=false,last=0,time=0,shake=0,flash=0,soundOn=true,ac=null,beat=0,beatAt=0;
+const keys={}, pressed={};
+const roomDefs={
+ '0,0':{name:'Whisper Grove',blocks:[[5,5,3,1],[12,3,1,4],[3,11,2,2],[14,12,3,1]],enemies:[[220,105,'slime']],sign:[70,50,'THREE SUNSHARDS\nWAKE THE GROVE']},
+ '1,0':{name:'Briar Path',blocks:[[4,3,1,7],[9,7,5,1],[14,3,2,2],[12,12,1,3]],enemies:[[130,80,'slime'],[235,190,'bat'],[110,210,'slime']],shard:[255,55]},
+ '2,0':{name:'Old Rampart',blocks:[[3,4,5,1],[12,4,5,1],[7,9,6,1],[3,13,4,1],[14,12,3,1]],enemies:[[85,100,'bat'],[235,105,'slime']],gate:[144,40],shard:[160,65]},
+ '0,1':{name:'Moonlit Marsh',water:[[3,3,5,3],[12,2,4,4],[7,11,6,3]],blocks:[[2,10,2,1],[15,10,2,1]],enemies:[[170,95,'bat'],[245,205,'slime']],shard:[62,205]},
+ '1,1':{name:'Mossy Hollow',blocks:[[3,3,3,1],[14,3,3,1],[7,6,6,1],[5,11,1,4],[14,10,1,4]],enemies:[[85,85,'slime'],[235,85,'slime'],[160,205,'bat']],key:[160,145]},
+ '2,1':{name:'Sunken Shrine',blocks:[[3,4,4,1],[13,4,4,1],[3,13,4,1],[13,13,4,1],[7,7,2,1],[11,7,2,1]],enemies:[[80,150,'bat'],[240,150,'bat']],shrine:[160,138]}
+};
+let state;
+function reset(){
+ state={roomX:0,roomY:0,p:{x:152,y:205,w:13,h:14,dir:'up',hp:6,inv:0,attack:0,attackHit:new Set(),dash:0,dead:false},shards:0,key:false,got:new Set(),deadEnemies:new Set(),gateOpen:false,msg:'Find the three sunshards',msgT:210,roomNameT:130};
+}
+function room(){return roomDefs[state.roomX+','+state.roomY]}
+function idFor(kind){return state.roomX+','+state.roomY+':'+kind}
+function solidRects(){
+ let r=[{x:0,y:24,w:320,h:16},{x:0,y:272,w:320,h:16},{x:0,y:24,w:16,h:264},{x:304,y:24,w:16,h:264}],d=room();
+ (d.blocks||[]).forEach(b=>r.push({x:b[0]*T,y:b[1]*T,w:b[2]*T,h:b[3]*T}));
+ (d.water||[]).forEach(b=>r.push({x:b[0]*T,y:b[1]*T,w:b[2]*T,h:b[3]*T}));
+ if(d.gate&&!state.gateOpen)r.push({x:d.gate[0]-16,y:d.gate[1],w:32,h:12});
+ // door openings on room edges
+ if(state.roomY>0)r=r.filter((o,i)=>i!==0),r.push({x:0,y:24,w:140,h:16},{x:180,y:24,w:140,h:16});
+ if(state.roomY<1)r=r.filter((o,i)=>!(o.x===0&&o.y===272&&o.w===320)),r.push({x:0,y:272,w:140,h:16},{x:180,y:272,w:140,h:16});
+ if(state.roomX>0)r=r.filter(o=>!(o.x===0&&o.y===24&&o.w===16&&o.h===264)),r.push({x:0,y:24,w:16,h:112},{x:0,y:176,w:16,h:112});
+ if(state.roomX<2)r=r.filter(o=>!(o.x===304&&o.y===24&&o.w===16&&o.h===264)),r.push({x:304,y:24,w:16,h:112},{x:304,y:176,w:16,h:112});
+ return r;
+}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function canMove(nx,ny){let p={x:nx,y:ny,w:state.p.w,h:state.p.h};return !solidRects().some(r=>hit(p,r))}
+function enterRoom(x,y,px,py){state.roomX=x;state.roomY=y;state.p.x=px;state.p.y=py;state.roomNameT=100;state.msgT=0;tone(180,.08,'square',.03)}
+function swordAttack(){
+ if(!running||state.p.attack>0)return;
+ state.p.attack=18;state.p.attackHit.clear();tone(220,.05,'square',.045);tone(120,.08,'sawtooth',.025,.04);
+}
+function startDash(){if(!running||state.p.dash>0)return;state.p.dash=16;tone(340,.06,'square',.025)}
+function activateControl(k){if(k==='KeyJ'||k==='KeyZ')swordAttack();else if(k==='KeyK'||k==='KeyX')startDash()}
+function update(dt){if(!running)return; time+=dt;const p=state.p;if(p.inv>0)p.inv-=dt;if(p.attack>0)p.attack-=dt;if(p.dash>0)p.dash-=dt;if(state.msgT>0)state.msgT-=dt;if(state.roomNameT>0)state.roomNameT-=dt;
+ let dx=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0),dy=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0);
+ if(dx||dy){if(Math.abs(dx)>Math.abs(dy))p.dir=dx>0?'right':'left';else p.dir=dy>0?'down':'up';let n=Math.hypot(dx,dy);dx/=n;dy/=n;let sp=p.dash>0?2.5:1.25;let nx=p.x+dx*sp*dt,ny=p.y+dy*sp*dt;if(canMove(nx,p.y))p.x=nx;if(canMove(p.x,ny))p.y=ny}
+ if(pressed.KeyJ||pressed.KeyZ)swordAttack();
+ if(pressed.KeyK||pressed.KeyX)startDash();
+ // transitions
+ if(p.x<-6&&state.roomX>0)enterRoom(state.roomX-1,state.roomY,294,p.y); else if(p.x>313&&state.roomX<2)enterRoom(state.roomX+1,state.roomY,18,p.y); else if(p.y<18&&state.roomY>0)enterRoom(state.roomX,state.roomY-1,p.x,256); else if(p.y>278&&state.roomY<1)enterRoom(state.roomX,state.roomY+1,p.x,42);
+ let d=room();
+ if(d.gate&&!state.gateOpen&&Math.hypot(p.x+7-d.gate[0],p.y+7-d.gate[1])<34){if(state.key){state.gateOpen=true;state.msg='The moss key turns!';state.msgT=150;tone(660,.12,'square',.04);tone(880,.16,'square',.04,.12)}else if(state.msgT<20){state.msg='A moss-shaped keyhole…';state.msgT=120}}
+ let enemies=(d.enemies||[]).map((e,i)=>({x:e[0],y:e[1],type:e[2],id:idFor('e'+i)})).filter(e=>!state.deadEnemies.has(e.id));
+ enemies.forEach(e=>{
+   let vx=p.x-e.x,vy=p.y-e.y,dist=Math.hypot(vx,vy),speed=e.type==='bat'?.42:.27;if(dist<125&&dist>0){let ex=e.x+vx/dist*speed*dt,ey=e.y+vy/dist*speed*dt; if(!solidRects().some(r=>hit({x:ex-7,y:ey-7,w:14,h:14},r))){roomDefs[state.roomX+','+state.roomY].enemies[parseInt(e.id.split('e')[1])][0]=ex;roomDefs[state.roomX+','+state.roomY].enemies[parseInt(e.id.split('e')[1])][1]=ey;e.x=ex;e.y=ey}}
+   if(p.attack>4){let ar=attackRect();if(hit(ar,{x:e.x-8,y:e.y-8,w:16,h:16})&&!p.attackHit.has(e.id)){p.attackHit.add(e.id);state.deadEnemies.add(e.id);flash=5;shake=4;tone(90,.1,'square',.06)}}
+   if(hit({x:p.x,y:p.y,w:p.w,h:p.h},{x:e.x-7,y:e.y-7,w:14,h:14})&&p.inv<=0){p.hp--;p.inv=80;shake=7;tone(70,.18,'sawtooth',.06);if(p.hp<=0)gameOver()}
+ });
+ if(d.shard&&!state.got.has(idFor('shard'))&&Math.hypot(p.x+7-d.shard[0],p.y+7-d.shard[1])<17){state.got.add(idFor('shard'));state.shards++;state.msg='Sunshard found! '+state.shards+' / 3';state.msgT=170;for(let i=0;i<3;i++)tone(440+i*170,.12,'square',.035,i*.1)}
+ if(d.key&&!state.got.has(idFor('key'))&&Math.hypot(p.x+7-d.key[0],p.y+7-d.key[1])<18){state.got.add(idFor('key'));state.key=true;state.msg='You found the Moss Key';state.msgT=170;tone(330,.12,'square',.04);tone(660,.2,'square',.04,.12)}
+ if(d.shrine&&Math.hypot(p.x+7-d.shrine[0],p.y+7-d.shrine[1])<25){if(state.shards>=3)win();else if(state.msgT<20){state.msg='The altar needs '+(3-state.shards)+' more';state.msgT=120}}
+ for(let k in pressed)delete pressed[k];
+ musicTick();
+}
+function attackRect(){let p=state.p;if(p.dir==='up')return{x:p.x-5,y:p.y-22,w:24,h:25};if(p.dir==='down')return{x:p.x-5,y:p.y+10,w:24,h:25};if(p.dir==='left')return{x:p.x-23,y:p.y-5,w:25,h:24};return{x:p.x+10,y:p.y-5,w:25,h:24}}
+function gameOver(){running=false;document.getElementById('endTitle').innerHTML='QUEST<br>ENDED';document.getElementById('endText').textContent='The grove waits for another hero.';document.getElementById('endOverlay').classList.remove('hidden')}
+function win(){running=false;tone(440,.2,'square',.05);tone(554,.2,'square',.05,.2);tone(659,.35,'square',.05,.4);document.getElementById('endTitle').innerHTML='THE GROVE<br>AWAKENS';document.getElementById('endText').textContent='All three sunshards shine again.';document.getElementById('endOverlay').classList.remove('hidden')}
+function draw(){ctx.save();if(shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.82;if(shake<.2)shake=0}ctx.fillStyle=C.c;ctx.fillRect(0,0,W,H);drawFloor();drawRoom();drawHUD();if(flash>0){ctx.globalAlpha=.35;ctx.fillStyle=C.d;ctx.fillRect(0,0,W,H);flash--}ctx.restore()}
+function drawFloor(){ctx.fillStyle=C.c;ctx.fillRect(0,24,W,H-24);ctx.fillStyle=C.b;for(let y=40;y<280;y+=16)for(let x=16;x<304;x+=16){let n=((x*17+y*31+state.roomX*53+state.roomY*79)%11);if(n<2){ctx.fillRect(x+3,y+11,2,3);ctx.fillRect(x+7,y+9,2,5)}}}
+function tileRect(b,type){let x=b[0]*T,y=b[1]*T,w=b[2]*T,h=b[3]*T;ctx.fillStyle=type==='water'?C.a:C.b;ctx.fillRect(x,y,w,h);ctx.fillStyle=type==='water'?C.b:C.a;for(let yy=y;yy<y+h;yy+=16)for(let xx=x;xx<x+w;xx+=16){if(type==='water'){ctx.fillRect(xx+3,yy+5,9,2);ctx.fillRect(xx+8,yy+11,6,2)}else{ctx.fillRect(xx+2,yy+3,4,4);ctx.fillRect(xx+10,yy+9,4,4)}}}
+function drawRoom(){let d=room();
+ // borders
+ ctx.fillStyle=C.a;ctx.fillRect(0,24,320,16);ctx.fillRect(0,272,320,16);ctx.fillRect(0,24,16,264);ctx.fillRect(304,24,16,264);ctx.fillStyle=C.b;for(let x=0;x<320;x+=16){ctx.fillRect(x+3,27,10,7);ctx.fillRect(x+3,275,10,7)}for(let y=40;y<272;y+=16){ctx.fillRect(3,y+3,7,10);ctx.fillRect(310,y+3,7,10)}
+ // openings
+ ctx.fillStyle=C.c;if(state.roomY>0)ctx.fillRect(140,24,40,18);if(state.roomY<1)ctx.fillRect(140,270,40,18);if(state.roomX>0)ctx.fillRect(0,136,18,40);if(state.roomX<2)ctx.fillRect(302,136,18,40);
+ (d.water||[]).forEach(b=>tileRect(b,'water'));(d.blocks||[]).forEach(b=>tileRect(b,'bush'));
+ if(d.gate&&!state.gateOpen){ctx.fillStyle=C.a;ctx.fillRect(d.gate[0]-16,d.gate[1],32,12);ctx.fillStyle=C.d;ctx.fillRect(d.gate[0]-12,d.gate[1]+3,24,3);ctx.fillRect(d.gate[0]-9,d.gate[1],3,12);ctx.fillRect(d.gate[0]+6,d.gate[1],3,12)}
+ if(d.sign){ctx.fillStyle=C.a;ctx.fillRect(d.sign[0]-7,d.sign[1]-8,14,11);ctx.fillRect(d.sign[0]-2,d.sign[1]+3,4,8);if(Math.hypot(state.p.x-d.sign[0],state.p.y-d.sign[1])<30&&state.msgT<20){state.msg=d.sign[2];state.msgT=30}}
+ if(d.shrine)drawShrine(d.shrine[0],d.shrine[1]);
+ if(d.key&&!state.got.has(idFor('key')))drawKey(d.key[0],d.key[1]);
+ if(d.shard&&!state.got.has(idFor('shard')))drawShard(d.shard[0],d.shard[1]);
+ (d.enemies||[]).forEach((e,i)=>{if(!state.deadEnemies.has(idFor('e'+i)))drawEnemy(e[0],e[1],e[2])});
+ drawPlayer();
+ if(state.msgT>0)drawMessage(state.msg);
+ if(state.roomNameT>0){ctx.globalAlpha=Math.min(1,state.roomNameT/25);ctx.fillStyle=C.a;ctx.fillRect(70,35,180,19);text(d.name.toUpperCase(),160,40,C.d,9,'center');ctx.globalAlpha=1}
+}
+function drawPlayer(){let p=state.p;if(p.inv>0&&Math.floor(p.inv/5)%2)return;let x=Math.round(p.x),y=Math.round(p.y);ctx.fillStyle=C.a;ctx.fillRect(x+3,y,7,4);ctx.fillRect(x+1,y+4,11,8);ctx.fillStyle=C.d;ctx.fillRect(x+3,y+4,3,3);ctx.fillStyle=C.b;ctx.fillRect(x,y+12,5,3);ctx.fillRect(x+8,y+12,5,3);if(p.attack>0){let a=attackRect();ctx.fillStyle=C.d;ctx.fillRect(a.x,a.y,a.w,a.h);ctx.fillStyle=C.a;if(p.dir==='up'||p.dir==='down')ctx.fillRect(a.x+7,a.y,6,a.h);else ctx.fillRect(a.x,a.y+7,a.w,6)}}
+function drawEnemy(x,y,t){x=Math.round(x);y=Math.round(y);ctx.fillStyle=C.a;if(t==='slime'){ctx.fillRect(x-7,y-5,14,11);ctx.fillRect(x-5,y-8,10,3);ctx.fillStyle=C.d;ctx.fillRect(x-4,y-2,2,3);ctx.fillRect(x+2,y-2,2,3)}else{ctx.fillRect(x-4,y-5,8,10);ctx.fillRect(x-11,y-8,7,5);ctx.fillRect(x+4,y-8,7,5);ctx.fillStyle=C.d;ctx.fillRect(x-2,y-2,1,2);ctx.fillRect(x+2,y-2,1,2)}}
+function drawShard(x,y){let bob=Math.round(Math.sin(time/12)*2);ctx.fillStyle=C.a;ctx.fillRect(x-2,y-9+bob,5,19);ctx.fillRect(x-8,y-3+bob,17,6);ctx.fillStyle=C.d;ctx.fillRect(x-1,y-6+bob,3,13);ctx.fillRect(x-5,y-2+bob,11,4)}
+function drawKey(x,y){let bob=Math.round(Math.sin(time/15)*2);ctx.fillStyle=C.a;ctx.fillRect(x-7,y-7+bob,10,10);ctx.fillStyle=C.c;ctx.fillRect(x-4,y-4+bob,4,4);ctx.fillStyle=C.a;ctx.fillRect(x+2,y-2+bob,11,4);ctx.fillRect(x+9,y+1+bob,3,5)}
+function drawShrine(x,y){ctx.fillStyle=C.b;ctx.fillRect(x-28,y-20,56,40);ctx.fillStyle=C.a;ctx.fillRect(x-20,y-14,40,28);ctx.fillStyle=C.c;ctx.fillRect(x-12,y-8,24,16);for(let i=0;i<3;i++){ctx.fillStyle=i<state.shards?C.d:C.b;ctx.fillRect(x-8+i*8,y-4,5,8)}}
+function drawHUD(){ctx.fillStyle=C.a;ctx.fillRect(0,0,320,24);for(let i=0;i<3;i++){ctx.fillStyle=i<Math.ceil(state.p.hp/2)?C.d:C.b;ctx.fillRect(8+i*13,7,9,8);ctx.fillRect(10+i*13,5,5,12)}text('SHARDS '+state.shards+'/3',132,7,C.d,8);if(state.key){drawKey(235,12);text('KEY',248,8,C.d,7)}text('☼',302,6,C.d,10)}
+function drawMessage(msg){let lines=msg.split('\n');let w=Math.min(292,Math.max(...lines.map(s=>s.length))*7+18),h=lines.length*12+14,x=(320-w)/2,y=244-h;ctx.fillStyle=C.a;ctx.fillRect(x,y,w,h);ctx.strokeStyle=C.d;ctx.lineWidth=2;ctx.strokeRect(x+3,y+3,w-6,h-6);lines.forEach((s,i)=>text(s,x+w/2,y+8+i*12,C.d,8,'center'))}
+function text(s,x,y,color,size=8,align='left'){ctx.fillStyle=color;ctx.font=size+'px "Press Start 2P", monospace';ctx.textAlign=align;ctx.textBaseline='top';ctx.fillText(s,x,y)}
+function tone(freq,dur,type='square',vol=.03,delay=0){if(!soundOn||!ac)return;let o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+delay;o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur)}
+const melody=[220,277,330,277,247,294,370,294,220,277,330,415,370,330,277,247];
+function musicTick(){if(!soundOn||!ac)return;if(time>beatAt){tone(melody[beat%melody.length],.15,'square',.012);if(beat%4===0)tone(melody[beat%melody.length]/2,.25,'triangle',.01);beat++;beatAt=time+28}}
+function ensureAudio(){if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}
+function loop(ts){let dt=Math.min(2.5,(ts-last)/16.67||1);last=ts;update(dt);draw();requestAnimationFrame(loop)}
+function start(){ensureAudio();reset();running=true;document.getElementById('startOverlay').classList.add('hidden');document.getElementById('endOverlay').classList.add('hidden');last=performance.now()}
+document.getElementById('startBtn').onclick=start;document.getElementById('againBtn').onclick=start;document.getElementById('soundBtn').onclick=e=>{soundOn=!soundOn;e.currentTarget.textContent=soundOn?'♪ ON':'♪ OFF';if(soundOn)ensureAudio()};
+addEventListener('keydown',e=>{let k=e.code;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyJ','KeyK','KeyZ','KeyX','KeyW','KeyA','KeyS','KeyD'].includes(k))e.preventDefault();if(!keys[k])pressed[k]=true;keys[k]=true;ensureAudio()});addEventListener('keyup',e=>keys[e.code]=false);
+document.querySelectorAll('[data-key]').forEach(el=>{let k=el.dataset.key;let on=e=>{e.preventDefault();ensureAudio();if(!keys[k])pressed[k]=true;keys[k]=true;activateControl(k);el.classList.add('pressed');if(el.setPointerCapture&&e.pointerId!==undefined)el.setPointerCapture(e.pointerId)};let off=e=>{e.preventDefault();keys[k]=false;el.classList.remove('pressed')};el.addEventListener('pointerdown',on);el.addEventListener('pointerup',off);el.addEventListener('pointercancel',off);el.addEventListener('click',e=>{e.preventDefault();activateControl(k)});el.addEventListener('contextmenu',e=>e.preventDefault())});
+reset();draw();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
