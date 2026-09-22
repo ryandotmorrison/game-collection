@@ -153,7 +153,7 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 addEventListener('pointerdown',e=>{clicked=true;clickX=e.clientX;clickY=e.clientY;});
 let clicked=false,clickX=0,clickY=0;
-function consumeClick(){const c=clicked;clicked=false;return c?{x:clickX,y:clickY}:null;}
+function consumeClick(){const c=clicked;clicked=false;return c?scaleClick({x:clickX,y:clickY}):null;}
 // touch buttons
 const touch={left:false,right:false,jump:false,shoot:false,slide:false};
 function bindHold(id,prop){
@@ -383,7 +383,7 @@ const FOEDEF={
 function spawnFoe(t,x,y){
   const d=FOEDEF[t];
   foes.push({t:t,x:x,y:y,vx:0,vy:0,w:d.w,h:d.h,hp:d.hp,score:d.score,dmg:d.dmg,
-    cell:d.cell,t:rnd(0,2),hopT:rnd(0.2,1),dir:Math.random()<0.5?-1:1,
+    cell:d.cell,tm:rnd(0,2),hopT:rnd(0.2,1),dir:Math.random()<0.5?-1:1,
     shootT:rnd(1,2.5),baseY:y,state:'idle',stateT:0,hitT:0});
 }
 function explode(x,y,n,col,spd){
@@ -510,7 +510,7 @@ function updateFoes(dt,plats){
   const px=P.x+P.w/2,py=P.y+P.h/2;
   for(const f of foes){
     if(f.gone)continue;
-    f.t+=dt;if(f.hitT>0)f.hitT-=dt;
+    f.tm+=dt;if(f.hitT>0)f.hitT-=dt;
     const fx=f.x+f.w/2,fy=f.y+f.h/2;
     const dx=px-fx,dy=py-fy,adx=Math.abs(dx);
     switch(f.t){
@@ -538,18 +538,18 @@ function updateFoes(dt,plats){
         const sp=1.7;
         f.vx=clamp(dx*0.008,-sp,sp);
         f.baseY+=clamp(dy*0.006,-1,1);
-        f.x+=f.vx;f.y=f.baseY+Math.sin(f.t*3.2)*26;
+        f.x+=f.vx;f.y=f.baseY+Math.sin(f.tm*3.2)*26;
         f.face=dx>0?1:-1;
         break;}
       case 'jelly':
         f.vy=0.55;f.y+=f.vy;
-        f.x+=Math.sin(f.t*1.8)*0.9;
+        f.x+=Math.sin(f.tm*1.8)*0.9;
         if(f.y>H-40){f.y=-60;f.x=clamp(px+rnd(-300,300),40,3000);}
         break;
       case 'bat':
         f.stateT+=dt;
         if(f.state==='idle'){
-          f.y=f.baseY+Math.sin(f.t*2)*5;
+          f.y=f.baseY+Math.sin(f.tm*2)*5;
           if(adx<280&&dy>40&&!P.dead){f.state='dive';f.stateT=0;
             const a=Math.atan2(dy,dx);f.vx=Math.cos(a)*4.4;f.vy=Math.sin(a)*4.4;}
         }else if(f.state==='dive'){
@@ -749,7 +749,7 @@ function drawFoes(){
     ctx.save();
     if(f.hitT>0)ctx.globalAlpha=0.6;
     if(f.t==='mine'){
-      const p=0.7+0.3*Math.sin(f.t*6);
+      const p=0.7+0.3*Math.sin(f.tm*6);
       ctx.globalAlpha=p;
     }
     drawFrame(fr,dx,dy,dw,dh,false);
