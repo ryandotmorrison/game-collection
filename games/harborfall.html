@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>Harborfall</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    :root {
+      color-scheme: light dark;
+      --ink:#172e30; --muted:#5e706f; --paper:#f4f1e7; --panel:#fffdf6; --panel2:#e9e3d3;
+      --line:#c8c0ad; --sea:#8ec7ce; --sea-deep:#438b98; --accent:#cf5b37; --gold:#dca934;
+      --shadow:0 16px 42px rgba(25,48,49,.13); --human:#1f7588; --ai1:#bd5137; --ai2:#7060a0; --ai3:#c28b1f;
+      --timber:#39795d; --clay:#a94f35; --wool:#79a764; --grain:#d6a531; --iron:#637587; --desert:#cdbb8d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#edf5ef; --muted:#aebeb8; --paper:#101c1d; --panel:#182728; --panel2:#223536; --line:#3d5554; --sea:#2e6671; --sea-deep:#143f49; --accent:#ed7956; --gold:#f2bf49; --shadow:0 20px 48px rgba(0,0,0,.35); --desert:#88764e; }
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,sans-serif}
+    button,select{font:inherit}
+    button{touch-action:manipulation}
+    .game{width:min(1480px,100%);margin:0 auto;padding:clamp(10px,2vw,24px);display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+    .topline{grid-column:1/-1;display:flex;align-items:center;gap:12px;min-height:44px}
+    .turnmark{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.05rem}
+    .dot{width:12px;height:12px;border-radius:50%;background:var(--player,#111);box-shadow:0 0 0 4px color-mix(in srgb,var(--player,#111),transparent 78%)}
+    .phase{font:500 .72rem DM Mono,monospace;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+    .spacer{flex:1}
+    .iconbtn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:9px;min-width:42px;height:38px;cursor:pointer}
+    .boardCard{position:relative;min-width:0;background:linear-gradient(155deg,var(--sea),var(--sea-deep));border:1px solid color-mix(in srgb,var(--sea-deep),#000 15%);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;min-height:690px}
+    .boardCard:before{content:"";position:absolute;inset:0;opacity:.28;background-image:radial-gradient(circle at 15% 20%,transparent 0 8px,rgba(255,255,255,.35) 9px 10px,transparent 11px),radial-gradient(circle at 80% 70%,transparent 0 11px,rgba(255,255,255,.22) 12px 13px,transparent 14px);background-size:125px 105px,170px 150px}
+    #board{position:relative;width:100%;height:100%;min-height:690px;display:block;filter:drop-shadow(0 8px 8px rgba(15,42,45,.18));user-select:none;-webkit-user-select:none}
+    .hex{stroke:rgba(30,58,53,.38);stroke-width:2;transition:filter .15s,opacity .15s;cursor:pointer}
+    .hex:hover{filter:brightness(1.06)}
+    .tile-label{font:800 18px Archivo,sans-serif;text-anchor:middle;fill:#132e2b;pointer-events:none}
+    .tile-name{font:600 8px DM Mono,monospace;text-anchor:middle;fill:#294541;letter-spacing:.05em;text-transform:uppercase;pointer-events:none}
+    .pips{font:700 8px DM Mono,monospace;text-anchor:middle;fill:#294541;pointer-events:none}
+    .token{fill:#fff8dc;stroke:#665f4e;stroke-width:1.2;pointer-events:none}
+    .token.hot{stroke:#a93f31;stroke-width:2}.tile-label.hot{fill:#b2342d}
+    .robber{fill:#25383a;stroke:#fff8dc;stroke-width:1.5;pointer-events:none}.robber-ring{fill:none;stroke:#25383a;stroke-width:5;pointer-events:none}
+    .edge{stroke:transparent;stroke-width:15;cursor:pointer}.road{stroke-linecap:round;stroke-width:8;pointer-events:none}.road-under{stroke:#fff8dc;stroke-linecap:round;stroke-width:12;pointer-events:none}
+    .vertex{fill:transparent;stroke:transparent;stroke-width:11;cursor:pointer}.piece{stroke:#fff9e8;stroke-width:2;pointer-events:none}.city-roof{stroke:#fff9e8;stroke-width:2;pointer-events:none}
+    .harbor-line{stroke:#f8f1d4;stroke-width:3;stroke-dasharray:4 4}.harbor-badge{fill:#173f47;stroke:#f8f1d4;stroke-width:1.5}.harbor-text{font:700 8px DM Mono,monospace;fill:#fff;text-anchor:middle;dominant-baseline:middle}
+    .valid{filter:drop-shadow(0 0 7px #fff);stroke:#fff!important}.invalid{opacity:.38}
+    .side{display:flex;flex-direction:column;gap:12px;min-width:0}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:0 8px 24px rgba(30,50,50,.07);padding:14px}
+    .scoreboard{display:grid;gap:8px}
+    .playerRow{display:grid;grid-template-columns:12px 1fr auto auto;align-items:center;gap:8px;padding:7px 6px;border-bottom:1px solid color-mix(in srgb,var(--line),transparent 45%)}
+    .playerRow:last-child{border:0}.playerRow.active{background:color-mix(in srgb,var(--player),transparent 88%);border-radius:8px;border-bottom-color:transparent}
+    .pname{font-weight:700;font-size:.9rem}.meta{font:500 .68rem DM Mono,monospace;color:var(--muted)}.vp{font-weight:800}.cards{font:500 .72rem DM Mono,monospace;color:var(--muted)}
+    .handHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.handHead h2,.card h2{font-size:.78rem;margin:0;text-transform:uppercase;letter-spacing:.08em}.handTotal{font:500 .7rem DM Mono,monospace;color:var(--muted)}
+    .resources{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .res{padding:7px 3px 6px;border-radius:8px;text-align:center;background:color-mix(in srgb,var(--r),transparent 86%);border-top:3px solid var(--r)}
+    .res b{display:block;font-size:1.05rem}.res small{display:block;font:500 .57rem DM Mono,monospace;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .diceLine{display:flex;align-items:center;gap:8px}.dice{display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:var(--ink);color:var(--paper);border-radius:10px;font:800 1.22rem DM Mono,monospace;box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--paper),transparent 65%)}
+    .primary{border:0;border-radius:10px;padding:12px 16px;background:var(--accent);color:#fff;font-weight:800;cursor:pointer;flex:1;box-shadow:0 4px 0 color-mix(in srgb,var(--accent),#000 25%)}
+    .primary:active{transform:translateY(2px);box-shadow:0 2px 0 color-mix(in srgb,var(--accent),#000 25%)}.primary:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
+    .secondary{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--panel);color:var(--ink);font-weight:700;cursor:pointer}.secondary:disabled{opacity:.4}
+    .builds{display:grid;gap:7px}.build{display:grid;grid-template-columns:1fr auto;align-items:center;text-align:left}.build strong{display:block}.cost{font:500 .62rem DM Mono,monospace;color:var(--muted)}
+    .build.selected{outline:3px solid color-mix(in srgb,var(--accent),transparent 60%);border-color:var(--accent)}
+    .tradeLine{display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center}.tradeLine select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px}.rate{text-align:center;font:500 .68rem DM Mono,monospace;color:var(--muted)}
+    .logCard{flex:1;min-height:130px}.log{height:142px;overflow:auto;margin-top:9px;padding-right:4px}.log p{margin:0;padding:5px 0;border-bottom:1px dotted var(--line);font-size:.77rem;line-height:1.35}.log p:last-child{border:0}.log time{font:500 .62rem DM Mono,monospace;color:var(--muted);margin-right:6px}
+    .help{font-size:.75rem;line-height:1.4;color:var(--muted)}
+    .overlay{position:fixed;inset:0;background:rgba(7,22,23,.72);display:grid;place-items:center;padding:18px;z-index:10}.overlay.hidden{display:none}.modal{width:min(500px,100%);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.35);padding:24px}.modal h1{font-size:clamp(1.8rem,7vw,3rem);line-height:.94;margin:0 0 12px;letter-spacing:-.05em}.modal p{line-height:1.5;color:var(--muted)}
+    .crest{width:64px;height:48px;margin-bottom:18px;display:block}.setup{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.setup label{font-size:.72rem;color:var(--muted)}.setup select{display:block;width:100%;margin-top:4px;padding:10px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:9px}
+    .modal .primary{width:100%}.rules{font-size:.72rem!important;margin:14px 0 0!important}.robberOptions{display:grid;gap:7px;margin-top:14px}.robberOptions button{border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:11px;border-radius:9px;text-align:left;font-weight:700;cursor:pointer}
+    .banner{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:#173f47;color:#fff7e2;border:1px solid rgba(255,255,255,.55);border-radius:9px;padding:9px 13px;font:600 .72rem DM Mono,monospace;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:3;pointer-events:none;max-width:80%;text-align:center}.banner.hidden{display:none}
+    .mobileActions{display:none}
+    @media(max-width:900px){
+      .game{display:block;padding:8px 8px 84px}.topline{padding:2px 3px 8px}.boardCard{min-height:0;height:min(66vh,610px);border-radius:13px}.boardCard #board{min-height:0;height:100%}.side{margin-top:10px;display:grid;grid-template-columns:1fr 1fr}.scoreCard,.logCard{grid-column:1/-1}.card{padding:12px}.resources{gap:4px}.res small{font-size:.5rem}.log{height:110px}.mobileActions{position:fixed;display:grid;grid-template-columns:1fr 1fr;gap:8px;bottom:0;left:0;right:0;padding:10px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:color-mix(in srgb,var(--paper),transparent 4%);border-top:1px solid var(--line);z-index:5}.desktopTurn{display:none}
+    }
+    @media(max-width:560px){.boardCard{height:52vh;min-height:410px}.side{grid-template-columns:1fr}.scoreCard,.logCard{grid-column:auto}.setup{grid-template-columns:1fr}.playerRow{grid-template-columns:10px 1fr auto auto}.card h2{font-size:.72rem}.topline{gap:7px}.turnmark{font-size:.9rem}.phase{font-size:.6rem}}
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="game" aria-label="Harborfall strategy game">
+    <header class="topline">
+      <div class="turnmark"><span class="dot" id="turnDot"></span><span id="turnName">Your watch</span></div>
+      <span class="phase" id="phaseLabel">Roll the tide dice</span><span class="spacer"></span>
+      <button class="iconbtn" id="rulesBtn" aria-label="How to play">?</button>
+      <button class="iconbtn" id="muteBtn" aria-label="Mute sound">Sound</button>
+    </header>
+    <section class="boardCard" aria-label="Island board">
+      <div class="banner hidden" id="banner"></div>
+      <svg id="board" viewBox="0 0 900 760" role="group" aria-label="Interactive hexagonal island board with roads, outposts, citadels, harbors, and the raider"></svg>
+    </section>
+    <aside class="side">
+      <section class="card scoreCard"><div id="scoreboard" class="scoreboard"></div></section>
+      <section class="card">
+        <div class="handHead"><h2>Your cargo</h2><span class="handTotal" id="handTotal">0 cards</span></div>
+        <div class="resources" id="resources"></div>
+      </section>
+      <section class="card desktopTurn"><div class="diceLine"><div class="dice" id="diceFace">—</div><button class="primary" id="rollBtn">Roll tide dice</button><button class="secondary" id="endBtn">End watch</button></div></section>
+      <section class="card">
+        <h2>Build</h2>
+        <div class="builds" style="margin-top:9px">
+          <button class="secondary build" data-build="road"><span><strong>Causeway</strong><span class="cost">1 driftwood · 1 emberclay</span></span><span>0 VP</span></button>
+          <button class="secondary build" data-build="settlement"><span><strong>Outpost</strong><span class="cost">1 driftwood · 1 emberclay · 1 cloudwool · 1 sungrain</span></span><span>1 VP</span></button>
+          <button class="secondary build" data-build="city"><span><strong>Citadel</strong><span class="cost">3 deepiron · 2 sungrain</span></span><span>2 VP</span></button>
+        </div>
+        <div class="help" id="buildHelp" style="margin-top:8px">Roll first, then choose a build.</div>
+      </section>
+      <section class="card">
+        <h2>Dock exchange</h2>
+        <div class="tradeLine" style="margin-top:9px"><select id="giveRes" aria-label="Resource to give"></select><span class="rate" id="tradeRate">4 : 1</span><select id="getRes" aria-label="Resource to receive"></select></div>
+        <button class="secondary" id="tradeBtn" style="width:100%;margin-top:8px">Make exchange</button>
+      </section>
+      <section class="card logCard"><h2>Captain's log</h2><div id="log" class="log" aria-live="polite"></div></section>
+    </aside>
+  </div>
+  <div class="mobileActions"><button class="primary" id="mobileRoll">Roll tide dice</button><button class="secondary" id="mobileEnd">End watch</button></div>
+
+  <div class="overlay" id="startOverlay">
+    <div class="modal">
+      <svg class="crest" viewBox="0 0 80 60" aria-hidden="true"><path d="M8 45Q40 57 72 45V18Q40 6 8 18Z" fill="var(--sea-deep)"/><path d="M20 40q20 10 40 0M27 33q13 7 26 0M40 12v25M40 13l16 9H40" fill="none" stroke="#fff7dc" stroke-width="3" stroke-linecap="round"/></svg>
+      <h1>Raise a harbor from the wild tide.</h1>
+      <p>Claim the island's richest crossings, link your outposts, and be first to earn 10 renown. Every game reshuffles the coast.</p>
+      <div class="setup"><label>Rival captains<select id="aiCount"><option value="2">2 rivals</option><option value="3">3 rivals</option></select></label><label>Board pace<select id="pace"><option value="normal">Standard</option><option value="swift">Swift start</option></select></label></div>
+      <button class="primary" id="startBtn">Set sail</button>
+      <p class="rules">The opening outposts are surveyed automatically. A swift start adds extra cargo so you can build immediately.</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="messageOverlay"><div class="modal" id="messageModal"></div></div>
+
+<script>
+(()=>{
+  'use strict';
+  const NS='http://www.w3.org/2000/svg';
+  const R=['driftwood','emberclay','cloudwool','sungrain','deepiron'];
+  const RES_META={
+    driftwood:{label:'Driftwood',color:'var(--timber)'},emberclay:{label:'Emberclay',color:'var(--clay)'},
+    cloudwool:{label:'Cloudwool',color:'var(--wool)'},sungrain:{label:'Sungrain',color:'var(--grain)'},deepiron:{label:'Deepiron',color:'var(--iron)'},desert:{label:'Saltflat',color:'var(--desert)'}
+  };
+  const PLAYER_COLORS=['var(--human)','var(--ai1)','var(--ai2)','var(--ai3)'];
+  const RAW_COLORS=['#1f7588','#bd5137','#7060a0','#c28b1f'];
+  const COSTS={road:{driftwood:1,emberclay:1},settlement:{driftwood:1,emberclay:1,cloudwool:1,sungrain:1},city:{deepiron:3,sungrain:2}};
+  const HEX_SIZE=93,CX=445,CY=377;
+  let G=null,audioCtx=null,muted=false,aiTimer=null;
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const svg=$('#board');
+
+  function rngShuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function sum(obj){return Object.values(obj).reduce((a,b)=>a+b,0)}
+  function canPay(p,cost){return Object.entries(cost).every(([r,n])=>p.hand[r]>=n)}
+  function pay(p,cost){Object.entries(cost).forEach(([r,n])=>p.hand[r]-=n)}
+  function gain(p,r,n=1){p.hand[r]+=n}
+  function hexCenter(q,r){return {x:CX+HEX_SIZE*Math.sqrt(3)*(q+r/2),y:CY+HEX_SIZE*1.5*r}}
+  function corners(c){return Array.from({length:6},(_,i)=>{const a=(Math.PI/180)*(60*i-30);return{x:c.x+HEX_SIZE*Math.cos(a),y:c.y+HEX_SIZE*Math.sin(a)}})}
+  function keyPoint(p){return `${Math.round(p.x*10)/10},${Math.round(p.y*10)/10}`}
+  function el(name,attrs={},text=''){const n=document.createElementNS(NS,name);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text)n.textContent=text;return n}
+  function log(msg){if(!G)return;G.log.unshift(msg);G.log=G.log.slice(0,50);renderLog()}
+  function tone(freq=440,dur=.08,type='sine'){if(muted)return;try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.06,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur)}catch(e){}}
+  function sound(kind){if(kind==='roll'){tone(260,.05,'square');setTimeout(()=>tone(390,.08,'square'),65)}else if(kind==='build'){tone(330,.07);setTimeout(()=>tone(495,.12),70)}else if(kind==='win'){[330,440,550,660].forEach((f,i)=>setTimeout(()=>tone(f,.18),i*100))}else tone(180,.1,'sawtooth')}
+
+  function makeState(aiCount,pace){
+    const names=['You','Coral Finch','Northstar','Copper Gull'];
+    const players=names.slice(0,aiCount+1).map((name,i)=>({name,color:RAW_COLORS[i],hand:Object.fromEntries(R.map(r=>[r,pace==='swift'?3:1])),roads:[],settlements:[],cities:[],vp:0,longest:0,isAI:i>0}));
+    return {players,current:0,phase:'roll',roll:null,tiles:[],vertices:[],edges:[],ports:[],robber:0,mode:null,log:[],winner:null,pendingRobber:false};
+  }
+  function buildBoard(){
+    const coords=[];for(let q=-2;q<=2;q++)for(let r=-2;r<=2;r++){const s=-q-r;if(Math.max(Math.abs(q),Math.abs(r),Math.abs(s))<=2)coords.push({q,r})}
+    const types=rngShuffle(['desert',...Array(4).fill('driftwood'),...Array(3).fill('emberclay'),...Array(4).fill('cloudwool'),...Array(4).fill('sungrain'),...Array(3).fill('deepiron')]);
+    let nums; const base=[2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
+    for(let tries=0;tries<100;tries++){nums=rngShuffle([...base]);let ni=0,ok=true;const hot=[];types.forEach((t,i)=>{if(t!=='desert'){const n=nums[ni++];if(n===6||n===8)hot.push(i)}});for(let a=0;a<hot.length;a++)for(let b=a+1;b<hot.length;b++){const A=coords[hot[a]],B=coords[hot[b]];if(Math.max(Math.abs(A.q-B.q),Math.abs(A.r-B.r),Math.abs((-A.q-A.r)-(-B.q-B.r)))===1)ok=false}if(ok)break}
+    const vMap=new Map(),eMap=new Map();let ni=0;
+    G.tiles=coords.map((h,i)=>{const c=hexCenter(h.q,h.r),cs=corners(c),vi=cs.map(p=>{const k=keyPoint(p);if(!vMap.has(k)){const id=vMap.size;vMap.set(k,id);G.vertices.push({id,x:p.x,y:p.y,tiles:[],edges:[],building:null})}return vMap.get(k)});for(let j=0;j<6;j++){const a=vi[j],b=vi[(j+1)%6],k=a<b?`${a}-${b}`:`${b}-${a}`;if(!eMap.has(k)){const id=eMap.size;eMap.set(k,id);G.edges.push({id,a,b,road:null,tiles:[]})}const eid=eMap.get(k);G.edges[eid].tiles.push(i);G.vertices[a].edges.push(eid)}vi.forEach(v=>G.vertices[v].tiles.push(i));const type=types[i],number=type==='desert'?null:nums[ni++];return{id:i,...h,...c,type,number,verts:vi,edges:vi.map((v,j)=>eMap.get(v<vi[(j+1)%6]?`${v}-${vi[(j+1)%6]}`:`${vi[(j+1)%6]}-${v}`))}});
+    const boundary=G.edges.filter(e=>e.tiles.length===1);const bc={x:CX,y:CY};boundary.sort((e1,e2)=>{const m1={x:(G.vertices[e1.a].x+G.vertices[e1.b].x)/2,y:(G.vertices[e1.a].y+G.vertices[e1.b].y)/2},m2={x:(G.vertices[e2.a].x+G.vertices[e2.b].x)/2,y:(G.vertices[e2.a].y+G.vertices[e2.b].y)/2};return Math.atan2(m1.y-bc.y,m1.x-bc.x)-Math.atan2(m2.y-bc.y,m2.x-bc.x)});
+    const portTypes=rngShuffle(['any','any','any','any','driftwood','emberclay','cloudwool','sungrain','deepiron']);
+    for(let i=0;i<9;i++){const e=boundary[(i*3)%boundary.length];G.ports.push({edge:e.id,a:e.a,b:e.b,type:portTypes[i]})}
+    G.robber=G.tiles.findIndex(t=>t.type==='desert');
+  }
+  function adjacentVertices(v){return G.vertices[v].edges.map(eid=>{const e=G.edges[eid];return e.a===v?e.b:e.a})}
+  function legalSettlement(player,v,initial=false){const x=G.vertices[v];if(x.building)return false;if(adjacentVertices(v).some(n=>G.vertices[n].building))return false;if(initial)return true;return x.edges.some(eid=>G.edges[eid].road===player)}
+  function legalRoad(player,eid,initial=false){const e=G.edges[eid];if(e.road!==null)return false;for(const v of [e.a,e.b]){const b=G.vertices[v].building;if(b&&b.player===player)return true;if(!b||b.player===player){if(G.vertices[v].edges.some(x=>G.edges[x].road===player))return true}}
+    return initial&&[e.a,e.b].some(v=>G.vertices[v].building?.player===player)
+  }
+  function initialPlace(){
+    const order=[...G.players.keys(),...[...G.players.keys()].reverse()];
+    for(const pi of order){const options=G.vertices.filter(v=>legalSettlement(pi,v.id,true)).sort((a,b)=>vertexValue(b.id)-vertexValue(a.id));const top=options.slice(0,Math.min(8,options.length));const v=top[Math.floor(Math.random()*top.length)]||options[0];placeSettlement(pi,v.id,true);const roads=v.edges.filter(e=>legalRoad(pi,e,true));if(roads.length)placeRoad(pi,roads[Math.floor(Math.random()*roads.length)],true)}
+    G.players.forEach((p,pi)=>{const v=p.settlements[1];if(v!==undefined)G.vertices[v].tiles.forEach(ti=>{const t=G.tiles[ti];if(t.type!=='desert')gain(p,t.type)})});
+    updateScores();
+  }
+  function vertexValue(v){return G.vertices[v].tiles.reduce((s,ti)=>{const n=G.tiles[ti].number;return s+(!n?0:6-Math.abs(7-n))},0)}
+  function placeSettlement(pi,v,free=false){if(!free)pay(G.players[pi],COSTS.settlement);G.vertices[v].building={player:pi,type:'settlement'};G.players[pi].settlements.push(v);sound('build');updateScores()}
+  function placeCity(pi,v,free=false){if(!free)pay(G.players[pi],COSTS.city);G.vertices[v].building.type='city';G.players[pi].settlements=G.players[pi].settlements.filter(x=>x!==v);G.players[pi].cities.push(v);sound('build');updateScores()}
+  function placeRoad(pi,e,free=false){if(!free)pay(G.players[pi],COSTS.road);G.edges[e].road=pi;G.players[pi].roads.push(e);sound('build');updateScores()}
+  function collect(n){
+    const gains=G.players.map(()=>Object.fromEntries(R.map(r=>[r,0])));G.tiles.forEach(t=>{if(t.number!==n||t.id===G.robber)return;t.verts.forEach(v=>{const b=G.vertices[v].building;if(b)gains[b.player][t.type]+=b.type==='city'?2:1})});
+    gains.forEach((bag,pi)=>Object.entries(bag).forEach(([r,k])=>{if(k)gain(G.players[pi],r,k)}));
+    const parts=gains.map((bag,pi)=>{const got=Object.entries(bag).filter(x=>x[1]).map(([r,n])=>`${n} ${RES_META[r].label.toLowerCase()}`).join(', ');return got?`${G.players[pi].name}: ${got}`:''}).filter(Boolean);log(parts.length?`Tide ${n} delivered — ${parts.join(' · ')}`:`Tide ${n} found no open docks.`)
+  }
+  function rollDice(forAI=false){if(G.winner!==null||G.phase!=='roll')return;const a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6),n=a+b;G.roll=n;$('#diceFace').textContent=`${a} + ${b}`;sound('roll');log(`${G.players[G.current].name} rolled ${n}.`);if(n===7){handleSeven(G.current,forAI)}else{collect(n);G.phase='build';afterPhaseChange();if(forAI)setTimeout(aiBuild,280)}}
+  function discardHalf(p){const count=sum(p.hand);if(count<=7)return 0;let n=Math.floor(count/2),discarded=0;while(discarded<n){const choices=R.filter(r=>p.hand[r]>0);const r=choices[Math.floor(Math.random()*choices.length)];p.hand[r]--;discarded++}return discarded}
+  function handleSeven(pi,forAI){const ds=G.players.map(p=>discardHalf(p));const who=ds.map((n,i)=>n?`${G.players[i].name} cast off ${n}`:'').filter(Boolean);if(who.length)log(`Storm limits: ${who.join(', ')}.`);G.pendingRobber=true;G.phase='robber';renderAll();if(forAI){setTimeout(()=>aiMoveRobber(pi),320)}else{showBanner('Storm! Tap a land tile to move the Reef Stalker.')}}
+  function eligibleVictims(tile,pi){const set=new Set();G.tiles[tile].verts.forEach(v=>{const b=G.vertices[v].building;if(b&&b.player!==pi&&sum(G.players[b.player].hand)>0)set.add(b.player)});return [...set]}
+  function moveRobber(tile,pi,victim=null){if(tile===G.robber)return;G.robber=tile;const victims=eligibleVictims(tile,pi);if(victim===null&&victims.length===1)victim=victims[0];if(victim!==null&&victims.includes(victim)){const cards=R.flatMap(r=>Array(G.players[victim].hand[r]).fill(r));if(cards.length){const r=cards[Math.floor(Math.random()*cards.length)];G.players[victim].hand[r]--;G.players[pi].hand[r]++;log(`${G.players[pi].name} moved the Reef Stalker and took 1 cargo from ${G.players[victim].name}.`)}}else log(`${G.players[pi].name} moved the Reef Stalker.`);G.pendingRobber=false;G.phase='build';hideBanner();renderAll();if(G.players[pi].isAI)setTimeout(aiBuild,250)}
+  function requestVictim(tile){const vs=eligibleVictims(tile,G.current);if(vs.length<=1){moveRobber(tile,G.current,vs[0]??null);return}showModal(`<h1>Choose a rival ship.</h1><p>Steal one random cargo card from a captain beside this tile.</p><div class="robberOptions">${vs.map(v=>`<button data-victim="${v}">${G.players[v].name} · ${sum(G.players[v].hand)} cards</button>`).join('')}</div>`,false);$$('[data-victim]').forEach(b=>b.onclick=()=>{hideModal();moveRobber(tile,G.current,+b.dataset.victim)})}
+  function aiMoveRobber(pi){let best=G.tiles.filter(t=>t.id!==G.robber).sort((a,b)=>robberValue(b,pi)-robberValue(a,pi))[0];const vs=eligibleVictims(best.id,pi);moveRobber(best.id,pi,vs.sort((a,b)=>sum(G.players[b].hand)-sum(G.players[a].hand))[0]??null)}
+  function robberValue(t,pi){return t.verts.reduce((s,v)=>{const b=G.vertices[v].building;return s+(b?(b.player===pi?-4:3)*(b.type==='city'?2:1):0)},0)+(t.number?(6-Math.abs(7-t.number)):0)}
+  function harborRatio(pi,r){let ratio=4;for(const p of G.ports){if([p.a,p.b].some(v=>G.vertices[v].building?.player===pi)){if(p.type==='any')ratio=Math.min(ratio,3);if(p.type===r)ratio=2}}return ratio}
+  function makeTrade(pi,give,get){if(give===get)return false;const ratio=harborRatio(pi,give),p=G.players[pi];if(p.hand[give]<ratio)return false;p.hand[give]-=ratio;p.hand[get]++;log(`${p.name} exchanged ${ratio} ${RES_META[give].label.toLowerCase()} for 1 ${RES_META[get].label.toLowerCase()}.`);sound('trade');renderAll();return true}
+  function updateScores(){
+    G.players.forEach((p,pi)=>p.longest=longestRoad(pi));const max=Math.max(...G.players.map(p=>p.longest)),holders=G.players.filter(p=>p.longest===max&&max>=5);G.players.forEach(p=>p.vp=p.settlements.length+p.cities.length*2+(holders.length===1&&holders[0]===p?2:0));
+    const winner=G.players.findIndex(p=>p.vp>=10);if(winner>=0&&G.winner===null){G.winner=winner;sound('win');showModal(`<h1>${winner===0?'The harbor is yours.':G.players[winner].name+' claims the harbor.'}</h1><p>${G.players[winner].name} reached ${G.players[winner].vp} renown and united the coast.</p><button class="primary" id="againBtn">Play another island</button>`,false);setTimeout(()=>$('#againBtn').onclick=()=>location.reload(),0)}
+  }
+  function longestRoad(pi){
+    const roads=new Set(G.players[pi].roads);if(!roads.size)return 0;let best=0;
+    function dfs(v,used){best=Math.max(best,used.size);const block=G.vertices[v].building&&G.vertices[v].building.player!==pi;if(block&&used.size)return;for(const eid of G.vertices[v].edges){if(roads.has(eid)&&!used.has(eid)){const e=G.edges[eid],n=e.a===v?e.b:e.a;used.add(eid);dfs(n,used);used.delete(eid)}}}
+    G.players[pi].roads.forEach(eid=>{const e=G.edges[eid];dfs(e.a,new Set());dfs(e.b,new Set())});return best
+  }
+  function afterPhaseChange(){G.mode=null;renderAll()}
+  function endTurn(){if(G.winner!==null||G.current!==0||G.phase!=='build')return;G.mode=null;G.current=1;G.phase='roll';G.roll=null;renderAll();aiTimer=setTimeout(aiTurn,500)}
+  function aiTurn(){if(G.winner!==null)return;const p=G.players[G.current];showBanner(`${p.name} is charting a course…`);renderAll();setTimeout(()=>rollDice(true),420)}
+  function aiBuild(){if(G.winner!==null)return;const pi=G.current,p=G.players[pi];let actions=0;
+    function doOne(){if(actions>=3)return finish();let did=false;
+      const cityOptions=p.settlements.filter(v=>canPay(p,COSTS.city));if(cityOptions.length&&canPay(p,COSTS.city)){cityOptions.sort((a,b)=>vertexValue(b)-vertexValue(a));placeCity(pi,cityOptions[0]);log(`${p.name} raised a citadel.`);did=true}
+      else{const settlements=G.vertices.filter(v=>legalSettlement(pi,v.id)&&p.settlements.length<5);if(settlements.length&&canPay(p,COSTS.settlement)){settlements.sort((a,b)=>vertexValue(b.id)-vertexValue(a.id));placeSettlement(pi,settlements[0].id);log(`${p.name} founded an outpost.`);did=true}
+      else{const roads=G.edges.filter(e=>legalRoad(pi,e.id)&&p.roads.length<15);if(roads.length&&canPay(p,COSTS.road)){roads.sort((a,b)=>roadValue(b.id,pi)-roadValue(a.id,pi));placeRoad(pi,roads[0].id);log(`${p.name} laid a causeway.`);did=true}}}
+      if(!did&&aiTrade(pi))did=true;actions++;renderAll();if(did)setTimeout(doOne,260);else finish()
+    }
+    function finish(){if(G.winner!==null)return;G.current=(G.current+1)%G.players.length;G.phase='roll';G.roll=null;renderAll();if(G.current===0){hideBanner();log('Your watch begins. Roll the tide dice.')}else setTimeout(aiTurn,480)}
+    doOne()
+  }
+  function roadValue(eid,pi){const e=G.edges[eid];return Math.max(vertexValue(e.a),vertexValue(e.b))+Math.random()*3}
+  function aiTrade(pi){const p=G.players[pi];const goals=[COSTS.city,COSTS.settlement,COSTS.road];for(const goal of goals){const need=Object.entries(goal).find(([r,n])=>p.hand[r]<n);if(!need)continue;for(const give of R){const ratio=harborRatio(pi,give);if(p.hand[give]>=ratio+(goal[give]||0)){return makeTrade(pi,give,need[0])}}}return false}
+
+  function renderAll(){renderBoard();renderScore();renderHand();renderControls()}
+  function renderBoard(){
+    svg.innerHTML='';const defs=el('defs');Object.entries({driftwood:['#77aa72','#3d7659'],emberclay:['#d77b57','#a94734'],cloudwool:['#afd095','#77a361'],sungrain:['#f2c755','#c99425'],deepiron:['#91a8b3','#5e7180'],desert:['#d7c597','#af9762']}).forEach(([id,c])=>{const g=el('linearGradient',{id:`g-${id}`,x1:'0',y1:'0',x2:'1',y2:'1'});g.append(el('stop',{offset:'0','stop-color':c[0]}),el('stop',{offset:'1','stop-color':c[1]}));defs.append(g)});svg.append(defs);
+    const water=el('g',{'aria-hidden':'true'});for(let i=0;i<9;i++){water.append(el('path',{d:`M${45+i*97} ${90+(i%3)*15}q22 -9 44 0t44 0`,fill:'none',stroke:'rgba(255,255,255,.24)','stroke-width':3}))}svg.append(water);
+    const hg=el('g');G.tiles.forEach(t=>{const pts=corners(t).map(p=>`${p.x},${p.y}`).join(' ');const poly=el('polygon',{points:pts,fill:`url(#g-${t.type})`,class:'hex','data-tile':t.id,tabindex:0,'aria-label':`${RES_META[t.type].label}${t.number?' '+t.number:''}${G.robber===t.id?', Reef Stalker here':''}`});poly.addEventListener('click',()=>tileClick(t.id));poly.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tileClick(t.id)}});hg.append(poly);hg.append(el('text',{x:t.x,y:t.y-43,class:'tile-name'},RES_META[t.type].label));if(t.number){hg.append(el('circle',{cx:t.x,cy:t.y,r:25,class:`token ${t.number===6||t.number===8?'hot':''}`}));hg.append(el('text',{x:t.x,y:t.y+6,class:`tile-label ${t.number===6||t.number===8?'hot':''}`},String(t.number)));hg.append(el('text',{x:t.x,y:t.y+41,class:'pips'},'•'.repeat(6-Math.abs(7-t.number))))}if(G.robber===t.id){hg.append(el('circle',{cx:t.x,cy:t.y-12,r:13,class:'robber-ring'}));hg.append(el('path',{d:`M${t.x-13} ${t.y+21}q13-29 26 0z`,class:'robber'}))}});svg.append(hg);
+    const pg=el('g');G.ports.forEach(p=>{const a=G.vertices[p.a],b=G.vertices[p.b],mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=mx-CX,dy=my-CY,len=Math.hypot(dx,dy),bx=mx+dx/len*40,by=my+dy/len*40;pg.append(el('line',{x1:mx,y1:my,x2:bx,y2:by,class:'harbor-line'}));pg.append(el('circle',{cx:bx,cy:by,r:19,class:'harbor-badge'}));pg.append(el('text',{x:bx,y:by+1,class:'harbor-text'},p.type==='any'?'3:1':'2:1'));pg.append(el('title',{},p.type==='any'?'Open harbor — any cargo 3:1':`${RES_META[p.type].label} harbor — 2:1`))});svg.append(pg);
+    const eg=el('g');G.edges.forEach(e=>{const a=G.vertices[e.a],b=G.vertices[e.b];if(e.road!==null){eg.append(el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'road-under'}));eg.append(el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'road',stroke:G.players[e.road].color}))}const hit=el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:`edge ${G.mode==='road'?(legalRoad(0,e.id)?'valid':'invalid'):''}`,'data-edge':e.id,role:'button',tabindex:G.mode==='road'?0:-1,'aria-label':`Causeway position ${e.id+1}`});hit.onclick=()=>edgeClick(e.id);hit.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();edgeClick(e.id)}};eg.append(hit)});svg.append(eg);
+    const vg=el('g');G.vertices.forEach(v=>{if(v.building){const p=G.players[v.building.player];if(v.building.type==='settlement'){vg.append(el('path',{d:`M${v.x-10} ${v.y+8}V${v.y-4}L${v.x} ${v.y-14}L${v.x+10} ${v.y-4}V${v.y+8}Z`,fill:p.color,class:'piece'}))}else{vg.append(el('path',{d:`M${v.x-13} ${v.y+10}V${v.y-5}L${v.x-5} ${v.y-14}L${v.x+2} ${v.y-7}L${v.x+11} ${v.y-16}L${v.x+16} ${v.y-10}V${v.y+10}Z`,fill:p.color,class:'piece'}))}}const valid=G.mode==='settlement'?legalSettlement(0,v.id):G.mode==='city'?(v.building?.player===0&&v.building.type==='settlement'):false;const hit=el('circle',{cx:v.x,cy:v.y,r:15,class:`vertex ${G.mode?(valid?'valid':'invalid'):''}`,'data-vertex':v.id,role:'button',tabindex:G.mode?0:-1,'aria-label':`Crossing ${v.id+1}`});hit.onclick=()=>vertexClick(v.id);hit.onkeydown=ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();vertexClick(v.id)}};vg.append(hit)});svg.append(vg)
+  }
+  function tileClick(id){if(G.current===0&&G.phase==='robber'&&id!==G.robber)requestVictim(id)}
+  function edgeClick(id){if(G.current!==0||G.phase!=='build'||G.mode!=='road')return;if(!legalRoad(0,id))return;if(G.players[0].roads.length>=15){log('All 15 causeways are already on the coast.');return}if(!canPay(G.players[0],COSTS.road))return;placeRoad(0,id);log('You laid a causeway.');G.mode=null;renderAll()}
+  function vertexClick(id){if(G.current!==0||G.phase!=='build')return;const p=G.players[0];if(G.mode==='settlement'&&legalSettlement(0,id)){if(p.settlements.length>=5)return log('All five outposts are already in service.');if(!canPay(p,COSTS.settlement))return;placeSettlement(0,id);log('You founded an outpost.');G.mode=null;renderAll()}else if(G.mode==='city'&&G.vertices[id].building?.player===0&&G.vertices[id].building.type==='settlement'){if(p.cities.length>=4)return log('All four citadels are already raised.');if(!canPay(p,COSTS.city))return;placeCity(0,id);log('You raised a citadel.');G.mode=null;renderAll()}}
+  function renderScore(){const max=Math.max(...G.players.map(p=>p.longest));$('#scoreboard').innerHTML=G.players.map((p,i)=>`<div class="playerRow ${i===G.current?'active':''}" style="--player:${p.color}"><span class="dot"></span><span><span class="pname">${p.name}</span><span class="meta">${p.longest===max&&max>=5?' · longest route':''}</span></span><span class="cards">${sum(p.hand)} cards</span><span class="vp">${p.vp}/10</span></div>`).join('')}
+  function renderHand(){$('#resources').innerHTML=R.map(r=>`<div class="res" style="--r:${RES_META[r].color}"><b>${G.players[0].hand[r]}</b><small>${RES_META[r].label}</small></div>`).join('');const n=sum(G.players[0].hand);$('#handTotal').textContent=`${n} card${n===1?'':'s'}`}
+  function renderControls(){const human=G.current===0,roll=human&&G.phase==='roll',build=human&&G.phase==='build';$('#turnName').textContent=human?'Your watch':`${G.players[G.current].name}'s watch`;$('#turnDot').style.setProperty('--player',G.players[G.current].color);$('#phaseLabel').textContent=G.phase==='roll'?'Roll the tide dice':G.phase==='robber'?'Move the Reef Stalker':human?'Build, exchange, or end watch':'Rival captain planning';$('#rollBtn').disabled=!roll;$('#endBtn').disabled=!build;$('#mobileRoll').disabled=!roll;$('#mobileEnd').disabled=!build;$('#mobileRoll').textContent=roll?'Roll tide dice':G.phase==='robber'?'Move the raider':'Roll complete';$$('[data-build]').forEach(b=>{const type=b.dataset.build;b.disabled=!build||!canPay(G.players[0],COSTS[type]);b.classList.toggle('selected',G.mode===type)});$('#tradeBtn').disabled=!build;const rate=harborRatio(0,$('#giveRes').value||R[0]);$('#tradeRate').textContent=`${rate} : 1`;$('#buildHelp').textContent=G.mode?`Choose a glowing ${G.mode==='road'?'coast edge':'crossing'} on the island.`:build?'Choose a build, exchange cargo, or end your watch.':'Roll first, then choose a build.'}
+  function renderLog(){$('#log').innerHTML=G.log.map((x,i)=>`<p><time>${i===0?'NOW':String(i).padStart(2,'0')}</time>${x}</p>`).join('')}
+  function showBanner(t){$('#banner').textContent=t;$('#banner').classList.remove('hidden')}function hideBanner(){$('#banner').classList.add('hidden')}
+  function showModal(html,closable=true){$('#messageModal').innerHTML=html+(closable?'<button class="secondary" id="closeModal" style="width:100%;margin-top:12px">Back to the island</button>':'');$('#messageOverlay').classList.remove('hidden');if(closable)setTimeout(()=>$('#closeModal').onclick=hideModal,0)}function hideModal(){$('#messageOverlay').classList.add('hidden')}
+  function rules(){showModal(`<h1>Chart the island.</h1><p><b>On your watch:</b> roll, collect matching cargo beside your outposts and citadels, then build or exchange before ending the watch.</p><p><b>Placement:</b> outposts need one empty crossing between neighbors and must join your causeway. Causeways must join your network. Upgrade your own outpost into a citadel.</p><p><b>Storm roll 7:</b> captains above 7 cargo discard half. Move the Reef Stalker to block production and steal from an adjacent rival.</p><p><b>Victory:</b> outposts earn 1 renown, citadels 2. A unique route of at least 5 causeways earns 2 more. First to 10 wins.</p>`)}
+  function init(){
+    G=makeState(+$('#aiCount').value,$('#pace').value);buildBoard();initialPlace();log('Survey crews founded two outposts for each captain.');log('Your watch begins. Roll the tide dice.');$('#startOverlay').classList.add('hidden');const opts=R.map(r=>`<option value="${r}">${RES_META[r].label}</option>`).join('');$('#giveRes').innerHTML=opts;$('#getRes').innerHTML=opts;$('#getRes').selectedIndex=1;renderAll()
+  }
+  $('#startBtn').onclick=init;$('#rollBtn').onclick=()=>rollDice(false);$('#mobileRoll').onclick=()=>rollDice(false);$('#endBtn').onclick=endTurn;$('#mobileEnd').onclick=endTurn;
+  $$('#board').forEach(()=>{});$$('[data-build]').forEach(b=>b.onclick=()=>{if(b.disabled)return;G.mode=G.mode===b.dataset.build?null:b.dataset.build;renderAll()});
+  $('#tradeBtn').onclick=()=>{const a=$('#giveRes').value,b=$('#getRes').value;if(a===b)return log('Choose two different cargo types.');if(!makeTrade(0,a,b))log(`You need ${harborRatio(0,a)} ${RES_META[a].label.toLowerCase()} for that exchange.`)};
+  $('#giveRes').onchange=renderControls;$('#rulesBtn').onclick=rules;$('#muteBtn').onclick=()=>{muted=!muted;$('#muteBtn').textContent=muted?'Muted':'Sound';if(!muted)tone(440,.08)};
+})();
+</script>
+</body>
+</html>
