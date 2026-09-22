@@ -635,7 +635,7 @@ function updateParts(dt){
 /* ================= BOSS ================= */
 function spawnBoss(){
   boss={x:1400,y:170,w:320,h:320,hp:170,maxhp:170,active:false,t:0,atkT:2.5,
-    phase:1,hitT:0,mode:'enter',modeT:0,atkCycle:0,gone:false};
+    phase:1,hitT:0,mode:'enter',modeT:0,atkCycle:0,gone:false,swoopT:4,swooping:0};
 }
 function updateBoss(dt){
   if(!boss||boss.gone)return;
@@ -651,7 +651,16 @@ function updateBoss(dt){
   B.phase=frac>0.66?1:frac>0.33?2:3;
   const spd=B.phase===1?0.5:B.phase===2?0.75:1.0;
   B.x=1400+Math.sin(B.t*spd)*230;
-  B.y=165+Math.sin(B.t*spd*1.7)*45;
+  // swoop attack: dive to player's height so ground shots can connect
+  B.swoopT-=dt;
+  if(B.swoopT<=0&&B.swooping<=0){B.swooping=1.4;sfx.roar();}
+  if(B.swooping>0){
+    B.swooping-=dt;
+    B.y+=((py-70)-B.y)*0.09;
+    if(B.swooping<=0)B.swoopT=4.5+rnd(0,2);
+  }else{
+    B.y=165+Math.sin(B.t*spd*1.7)*45;
+  }
   B.x=clamp(B.x,camx+W-460,camx+W-140);
   // attacks
   B.atkT-=dt*(B.phase===3?1.5:1);
