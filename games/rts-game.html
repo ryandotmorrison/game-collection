@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>RTS Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+    :root{
+      color-scheme:light dark;--bg:#e8edf0;--panel:#f7fafb;--ink:#102126;--muted:#4d6369;--line:#a8b8bd;
+      --accent:#087e8b;--accent2:#ef8b24;--shadow:rgba(12,35,42,.18);--grid:rgba(14,63,70,.09);--good:#19744b;--bad:#b33c33;
+    }
+    @media(prefers-color-scheme:dark){:root{--bg:#081217;--panel:#102027;--ink:#e7f4f6;--muted:#94abb0;--line:#294047;--accent:#32c6d4;--accent2:#ffad49;--shadow:rgba(0,0,0,.4);--grid:rgba(91,188,202,.08);--good:#59d38d;--bad:#ff766a}}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:'Chakra Petch',system-ui,sans-serif;min-height:100vh}
+    button{font:inherit;color:inherit}
+    main{width:min(1180px,100%);margin:0 auto;padding:14px clamp(10px,2vw,24px) calc(24px + env(safe-area-inset-bottom))}
+    .topline{display:flex;gap:14px;align-items:end;justify-content:space-between;margin-bottom:10px}
+    .mission h1{font-size:clamp(21px,3vw,34px);margin:0;line-height:1;letter-spacing:-.03em}.mission p{margin:5px 0 0;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px}
+    .hud{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.meter{background:var(--panel);border:1px solid var(--line);padding:6px 10px;min-width:102px;box-shadow:0 3px 12px var(--shadow)}.meter span{display:block;color:var(--muted);font:10px 'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.08em}.meter b{font:600 18px 'IBM Plex Mono',monospace}
+    .shell{background:#061014;border:1px solid var(--line);box-shadow:0 12px 30px var(--shadow);position:relative;overflow:hidden}
+    canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;touch-action:none;cursor:crosshair}
+    .start,.end{position:absolute;inset:0;background:rgba(3,10,13,.9);color:#edf9fa;display:grid;place-items:center;padding:22px;z-index:5}.start.hidden,.end.hidden{display:none}
+    .brief{width:min(820px,100%)}.brief h2{font-size:clamp(28px,6vw,60px);line-height:.92;margin:0 0 12px;max-width:620px;letter-spacing:-.045em}.brief>p{max-width:620px;color:#abc1c6;margin:0 0 24px;font-size:15px}
+    .factions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.faction{border:1px solid #3e555c;background:#101f25;padding:14px;text-align:left;cursor:pointer;min-height:158px;transition:border-color .15s,background .15s}.faction:hover,.faction:focus-visible{border-color:#e6f4f6;background:#172b33;outline:none}.faction.selected{border:2px solid var(--faction);padding:13px}.sigil{width:32px;height:32px;border:2px solid var(--faction);display:grid;place-items:center;font-weight:700;color:var(--faction);margin-bottom:10px}.faction h3{margin:0 0 3px;font-size:18px}.faction p{margin:0 0 9px;color:#aac0c5;font-size:12px;line-height:1.35}.trait{color:var(--faction);font:600 10px 'IBM Plex Mono',monospace;text-transform:uppercase}
+    .launch{margin-top:12px;width:100%;background:#eaf6f7;color:#071418;border:0;padding:12px 16px;font-weight:700;cursor:pointer;letter-spacing:.04em}.launch:hover{background:#fff}.launch:disabled{opacity:.35;cursor:not-allowed}
+    .commandbar{display:grid;grid-template-columns:1.15fr 2fr 1.1fr;gap:8px;margin-top:9px}.panel{background:var(--panel);border:1px solid var(--line);padding:9px;min-height:80px}.panel-label{font:500 10px 'IBM Plex Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}.selection{display:flex;gap:10px;align-items:center}.unit-mark{width:46px;height:46px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;color:var(--accent);font-weight:700}.selection b,.selection span{display:block}.selection span{font:11px 'IBM Plex Mono',monospace;color:var(--muted);margin-top:3px}
+    .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.cmd{background:var(--bg);border:1px solid var(--line);padding:7px 6px;min-height:48px;text-align:left;cursor:pointer;position:relative}.cmd:hover,.cmd:focus-visible,.cmd.active{border-color:var(--accent);outline:none;background:color-mix(in srgb,var(--accent) 12%,var(--bg))}.cmd:disabled{opacity:.38;cursor:not-allowed}.cmd strong{display:block;font-size:11px;line-height:1.05}.cmd small{display:block;color:var(--muted);font:9px 'IBM Plex Mono',monospace;margin-top:3px}.hotkey{position:absolute;right:4px;top:3px;color:var(--accent);font:8px 'IBM Plex Mono',monospace}
+    .status{font:12px 'IBM Plex Mono',monospace;line-height:1.45;color:var(--muted)}.status strong{color:var(--ink)}.help{margin:9px 2px 0;display:flex;gap:14px;flex-wrap:wrap;color:var(--muted);font:10px 'IBM Plex Mono',monospace}.help b{color:var(--ink)}
+    .end .brief{text-align:center;max-width:520px}.end h2{font-size:52px;margin:0 0 10px}.end button{padding:11px 24px;border:1px solid #c9edef;background:#10272d;color:white;cursor:pointer}.end p{color:#aac0c5}
+    @media(max-width:720px){main{padding-top:8px}.topline{align-items:start}.mission p{display:none}.hud{gap:4px}.meter{min-width:72px;padding:5px 7px}.meter b{font-size:14px}.meter span{font-size:8px}.factions{grid-template-columns:1fr}.faction{min-height:auto;display:grid;grid-template-columns:34px 1fr;column-gap:9px}.faction .sigil{grid-row:1/4}.faction h3,.faction p{margin-bottom:3px}.commandbar{grid-template-columns:1fr}.panel{min-height:0}.intel{display:none}.actions{grid-template-columns:repeat(4,1fr)}.cmd{min-height:44px}.selection{display:grid;grid-template-columns:38px 1fr}.unit-mark{width:38px;height:38px}.help{display:none}.brief>p{font-size:13px;margin-bottom:12px}.start{position:fixed;inset:0;overflow-y:auto;align-items:start;padding:22px 14px calc(28px + env(safe-area-inset-bottom))}.start .brief{margin:auto 0}.brief h2{font-size:30px}.faction p{font-size:11px}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="topline">
+    <div class="mission"><h1>Break the enemy core.</h1><p>SECURE FLUX · BUILD A FORCE · ERASE THEIR COMMAND</p></div>
+    <div class="hud"><div class="meter"><span>Flux</span><b id="flux">—</b></div><div class="meter"><span>Forces</span><b id="army">—</b></div><div class="meter"><span>Core</span><b id="core">—</b></div></div>
+  </div>
+  <section class="shell" aria-label="Tactical battlefield">
+    <canvas id="game" width="960" height="600"></canvas>
+    <div class="start" id="start">
+      <div class="brief">
+        <h2>Choose how this war will be fought.</h2>
+        <p>Three armies. Three economies. One hostile command core. Your workers harvest automatically; your decisions determine what survives.</p>
+        <div class="factions">
+          <button class="faction" data-faction="aegis" style="--faction:#42d6df"><span class="sigil">A</span><h3>Aegis Directorate</h3><p>Disciplined armor and ranged fire. Expensive, dependable, hard to dislodge.</p><span class="trait">Fortify · +35% armor</span></button>
+          <button class="faction" data-faction="swarm" style="--faction:#ed6b45"><span class="sigil">S</span><h3>Cinder Swarm</h3><p>Cheap creatures erupt in numbers. Fragile alone, vicious as a flood.</p><span class="trait">Frenzy · rapid reinforcements</span></button>
+          <button class="faction" data-faction="veil" style="--faction:#e0c45a"><span class="sigil">V</span><h3>Veil Concord</h3><p>Mobile energy lancers strike from afar, blink through danger, then vanish.</p><span class="trait">Phase · teleport selected</span></button>
+        </div>
+        <button class="launch" id="launch" disabled>SELECT A FACTION</button>
+      </div>
+    </div>
+    <div class="end hidden" id="end"><div class="brief"><h2 id="endTitle">Victory</h2><p id="endText"></p><button id="again">COMMAND ANOTHER BATTLE</button></div></div>
+  </section>
+  <section class="commandbar">
+    <div class="panel"><div class="panel-label">Selection</div><div class="selection"><div class="unit-mark" id="unitMark">—</div><div><b id="selName">No units selected</b><span id="selDetail">Drag a box or tap one of your units</span></div></div></div>
+    <div class="panel"><div class="panel-label">Command deck</div><div class="actions">
+      <button class="cmd" id="unit1" disabled><span class="hotkey">1</span><strong>—</strong><small>— flux</small></button>
+      <button class="cmd" id="unit2" disabled><span class="hotkey">2</span><strong>—</strong><small>— flux</small></button>
+      <button class="cmd" id="turret" disabled><span class="hotkey">3</span><strong>Defense</strong><small>200 flux</small></button>
+      <button class="cmd" id="ability" disabled><span class="hotkey">Q</span><strong>Ability</strong><small>Ready</small></button>
+      <button class="cmd" id="move"><span class="hotkey">M</span><strong>Move</strong><small>then tap ground</small></button>
+      <button class="cmd" id="attack"><span class="hotkey">A</span><strong>Attack</strong><small>then tap target</small></button>
+      <button class="cmd" id="selectAll"><span class="hotkey">E</span><strong>Select army</strong><small>combat units</small></button>
+      <button class="cmd" id="hold"><span class="hotkey">H</span><strong>Hold</strong><small>guard position</small></button>
+    </div></div>
+    <div class="panel intel"><div class="panel-label">Field intelligence</div><div class="status" id="status"><strong>Awaiting deployment.</strong><br>Select a faction to begin.</div></div>
+  </section>
+  <div class="help"><span><b>SELECT</b> click / drag</span><span><b>ORDER</b> right-click</span><span><b>PAN VIEW</b> not required — full battlefield visible</span><span><b>TOUCH</b> choose Move or Attack, then tap</span></div>
+</main>
+<script>
+(()=>{
+const C=document.getElementById('game'),X=C.getContext('2d');
+const $=id=>document.getElementById(id); const W=960,H=600;
+const FACTIONS={
+ aegis:{name:'Aegis Directorate',color:'#42d6df',dark:'#1b7480',u1:{name:'Sentinel',cost:90,hp:88,dmg:11,range:92,speed:45,rate:.78,mark:'A'},u2:{name:'Bulwark',cost:175,hp:210,dmg:18,range:72,speed:30,rate:1.25,mark:'B'},worker:'Tech',turret:'Rail Bastion',ability:'Fortify'},
+ swarm:{name:'Cinder Swarm',color:'#ed6b45',dark:'#893522',u1:{name:'Skitter',cost:55,hp:48,dmg:13,range:26,speed:72,rate:.58,mark:'S'},u2:{name:'Broodmaw',cost:145,hp:128,dmg:25,range:38,speed:44,rate:1.08,mark:'M'},worker:'Drone',turret:'Spore Nest',ability:'Frenzy'},
+ veil:{name:'Veil Concord',color:'#e0c45a',dark:'#806d24',u1:{name:'Lancer',cost:105,hp:58,dmg:17,range:132,speed:55,rate:.95,mark:'V'},u2:{name:'Warden',cost:180,hp:105,dmg:29,range:115,speed:49,rate:1.35,mark:'W'},worker:'Wisp',turret:'Prism',ability:'Phase Step'}
+};
+let chosen=null,G=null,last=0,drag=null,mouse={x:0,y:0},mode=null,raf=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rnd=(a,b)=>a+Math.random()*(b-a);
+function entity(side,type,x,y,spec={}){return{id:Math.random(),side,type,x,y,tx:x,ty:y,hp:spec.hp||60,max:spec.hp||60,dmg:spec.dmg||0,range:spec.range||0,speed:spec.speed||0,rate:spec.rate||1,cool:0,r:type==='hq'?31:type==='turret'?20:type==='worker'?9:type==='u2'?14:11,selected:false,dead:false,hold:false,mark:spec.mark||'',pulse:0}}
+function reset(){
+ const enemy=Object.keys(FACTIONS).filter(k=>k!==chosen)[Math.floor(Math.random()*2)];
+ G={faction:chosen,enemy,flux:260,enemyFlux:160,time:0,units:[],shots:[],sparks:[],nodes:[{x:165,y:408,v:900},{x:475,y:298,v:1300},{x:785,y:190,v:900}],result:null,ability:0,wave:5,msg:'Workers are extracting nearby flux.',msgT:5};
+ G.units.push(entity(0,'hq',105,510,{hp:1200}),entity(1,'hq',855,90,{hp:1200}));
+ for(let i=0;i<3;i++){G.units.push(entity(0,'worker',145+i*18,480-i*8,{hp:44,speed:38,mark:'·'}));G.units.push(entity(1,'worker',815-i*18,120+i*8,{hp:44,speed:38,mark:'·'}))}
+ spawn(0,'u1');spawn(0,'u1');spawn(1,'u1');spawn(1,'u1');
+ $('start').classList.add('hidden');$('end').classList.add('hidden');setupButtons();last=performance.now();cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);
+}
+function spawn(side,t){
+ const f=FACTIONS[side?G.enemy:G.faction],s=f[t]; if(!s)return; const base=G.units.find(u=>u.side===side&&u.type==='hq'&&!u.dead); if(!base)return;
+ const angle=side?rnd(1.8,3.05):rnd(-1.35,-.15),d=rnd(48,76); let u=entity(side,t,base.x+Math.cos(angle)*d,base.y+Math.sin(angle)*d,s);
+ if(side){u.tx=180+rnd(-45,50);u.ty=440+rnd(-40,45)} G.units.push(u);
+ if(side===0&&G.faction==='swarm'&&t==='u1'){let v=entity(0,t,u.x+12,u.y+8,{...s,hp:s.hp*.72,dmg:s.dmg*.8});G.units.push(v)}
+}
+function setupButtons(){let f=FACTIONS[G.faction];$('unit1').querySelector('strong').textContent=f.u1.name;$('unit1').querySelector('small').textContent=f.u1.cost+' flux';$('unit2').querySelector('strong').textContent=f.u2.name;$('unit2').querySelector('small').textContent=f.u2.cost+' flux';$('turret').querySelector('strong').textContent=f.turret;$('ability').querySelector('strong').textContent=f.ability;['unit1','unit2','turret','ability'].forEach(id=>$(id).disabled=false)}
+function buy(t){if(!G||G.result)return;let s=FACTIONS[G.faction][t],cost=t==='turret'?200:s.cost;if(G.flux<cost){say('Insufficient flux.');return}G.flux-=cost;if(t==='turret'){mode='build';say('Choose a position near your command core.');activeMode('turret')}else{spawn(0,t);say(s.name+' deployed.')}}
+function say(s){G.msg=s;G.msgT=3.5}
+function activeMode(id){mode=id==='turret'?'build':id;document.querySelectorAll('.cmd').forEach(b=>b.classList.remove('active'));if($(id))$(id).classList.add('active')}
+function selectArmy(){G.units.forEach(u=>u.selected=!u.side&&!u.dead&&(u.type==='u1'||u.type==='u2'));mode=null;activeMode('none')}
+function useAbility(){if(!G||G.ability>0)return;let sel=G.units.filter(u=>u.selected&&!u.dead);if(!sel.length){say('Select units first.');return}let f=G.faction;if(f==='aegis'){sel.forEach(u=>{u.hp=Math.min(u.max,u.hp+35);u.pulse=8});say('Fortify: armor restored.')}else if(f==='swarm'){sel.forEach(u=>{u.pulse=10;u.rate*=.55;setTimeout(()=>{if(!u.dead)u.rate/=.55},7000)});say('Frenzy: attack speed surged.')}else{mode='phase';say('Phase Step: choose a destination.');activeMode('ability');return}G.ability=15}
+function order(x,y,attack=false){let sel=G.units.filter(u=>u.selected&&!u.dead);if(!sel.length)return;if(mode==='build'){let hq=G.units.find(u=>!u.side&&u.type==='hq');if(dist({x,y},hq)>230||x<35||y<35||x>W-35||y>H-35){G.flux+=200;say('Defense must be placed near your core. Flux refunded.')}else{G.units.push(entity(0,'turret',x,y,{hp:330,dmg:20,range:125,rate:.9,mark:'T'}));say('Defense online.')}mode=null;activeMode('none');return}
+ if(mode==='phase'){let cx=sel.reduce((a,u)=>a+u.x,0)/sel.length,cy=sel.reduce((a,u)=>a+u.y,0)/sel.length;sel.forEach(u=>{u.x=clamp(x+u.x-cx,20,W-20);u.y=clamp(y+u.y-cy,20,H-20);u.tx=u.x;u.ty=u.y;u.pulse=12});G.ability=15;mode=null;activeMode('none');say('Phase translation complete.');return}
+ let target=null;if(attack||mode==='attack')target=nearest({x,y},1,40);sel.forEach((u,i)=>{let a=i*.9,r=12*Math.sqrt(i);u.target=target||null;u.tx=x+Math.cos(a)*r;u.ty=y+Math.sin(a)*r;u.hold=false});mode=null;activeMode('none')}
+function nearest(p,side,max=1e9,filter=()=>true){let best=null,bd=max;for(const u of G.units){let d=dist(p,u);if(!u.dead&&u.side===side&&filter(u)&&d<bd){best=u;bd=d}}return best}
+function update(dt){if(!G||G.result)return;G.time+=dt;G.wave-=dt;G.ability=Math.max(0,G.ability-dt);G.msgT-=dt;
+ // economy: each living worker steadily harvests finite nearby nodes
+ for(const side of [0,1]){for(const w of G.units.filter(u=>u.side===side&&u.type==='worker'&&!u.dead)){let n=G.nodes.filter(n=>n.v>0).sort((a,b)=>dist(w,a)-dist(w,b))[0];if(n){let home=side?{x:815,y:120}:{x:145,y:480};let phase=(G.time+w.id*99)%5;if(phase<2.6){w.tx=n.x+(side?18:-18);w.ty=n.y+10}else{w.tx=home.x;w.ty=home.y}if(phase>4.85&&n.v>0){let gain=Math.min(8,n.v);n.v-=gain;if(side)G.enemyFlux+=gain;else G.flux+=gain}}}}
+ if(G.wave<=0){let ef=FACTIONS[G.enemy];let pick=Math.random()<.7?'u1':'u2';if(G.enemyFlux>=ef[pick].cost){G.enemyFlux-=ef[pick].cost;spawn(1,pick)}if(Math.random()<.3&&G.enemyFlux>=ef.u1.cost){G.enemyFlux-=ef.u1.cost;spawn(1,'u1')}G.wave=Math.max(3.2,7.5-G.time/75);}
+ for(const u of G.units){if(u.dead)continue;u.cool-=dt;u.pulse=Math.max(0,u.pulse-dt*3);
+  if(u.type!=='worker'&&u.type!=='hq'&&u.dmg>0){if(!u.target||u.target.dead){let candidates=G.units.filter(v=>v.side!==u.side&&!v.dead);let inRange=candidates.filter(v=>dist(u,v)<u.range+65);u.target=inRange.sort((a,b)=>dist(u,a)-dist(u,b))[0]||null}
+   if(u.target&&!u.target.dead){let d=dist(u,u.target);if(d<=u.range+u.target.r){if(u.cool<=0){fire(u,u.target);u.cool=u.rate} }else if(!u.hold&&((u.side===1)||u.target)){u.tx=u.target.x;u.ty=u.target.y}}
+  }
+  if((u.type==='hq'||u.type==='turret')&&u.dmg){let t=nearest(u,1-u.side,u.range,v=>true);if(t&&u.cool<=0){fire(u,t);u.cool=u.rate}}
+  let dx=u.tx-u.x,dy=u.ty-u.y,d=Math.hypot(dx,dy);if(d>2&&u.speed&&!u.hold){let step=Math.min(d,u.speed*dt);u.x+=dx/d*step;u.y+=dy/d*step;u.x=clamp(u.x,12,W-12);u.y=clamp(u.y,12,H-12)}
+ }
+ for(const s of G.shots){s.t+=dt;let q=Math.min(1,s.t/s.dur);s.x=s.sx+(s.target.x-s.sx)*q;s.y=s.sy+(s.target.y-s.sy)*q;if(q>=1){if(!s.target.dead){s.target.hp-=s.dmg;s.target.pulse=4;if(s.target.hp<=0){s.target.dead=true;s.target.selected=false;burst(s.target.x,s.target.y,s.color);if(s.target.type==='hq')finish(s.target.side===1)}}s.dead=true}}
+ G.shots=G.shots.filter(s=>!s.dead);G.sparks.forEach(s=>{s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt});G.sparks=G.sparks.filter(s=>s.life>0);updateUI();
+}
+function fire(u,t){let f=FACTIONS[u.side?G.enemy:G.faction],color=f.color;G.shots.push({sx:u.x,sy:u.y,x:u.x,y:u.y,target:t,dmg:u.dmg,t:0,dur:.12+dist(u,t)/900,color});}
+function burst(x,y,color){for(let i=0;i<13;i++)G.sparks.push({x,y,vx:rnd(-80,80),vy:rnd(-80,80),life:rnd(.3,.8),color})}
+function finish(win){G.result=win;setTimeout(()=>{$('endTitle').textContent=win?'Enemy core erased.':'Command core lost.';$('endText').textContent=win?'The field belongs to the '+FACTIONS[G.faction].name+'.':'The '+FACTIONS[G.enemy].name+' broke through your line. Rebuild, adapt, retaliate.';$('end').classList.remove('hidden')},650)}
+function updateUI(){let own=G.units.filter(u=>!u.side&&!u.dead),hq=own.find(u=>u.type==='hq');$('flux').textContent=Math.floor(G.flux);$('army').textContent=own.filter(u=>u.type==='u1'||u.type==='u2').length;$('core').textContent=hq?Math.max(0,Math.ceil(hq.hp/hq.max*100))+'%':'0%';$('ability').disabled=G.ability>0;$('ability').querySelector('small').textContent=G.ability>0?Math.ceil(G.ability)+'s cooldown':'Ready';let sel=own.filter(u=>u.selected);if(!sel.length){$('unitMark').textContent='—';$('selName').textContent='No units selected';$('selDetail').textContent='Drag a box or tap one of your units'}else{$('unitMark').textContent=sel.length===1?(sel[0].mark||'•'):sel.length;$('selName').textContent=sel.length===1?unitName(sel[0]):sel.length+' units selected';$('selDetail').textContent=Math.round(sel.reduce((a,u)=>a+u.hp/u.max,0)/sel.length*100)+'% average integrity'}if(G.msgT>0)$('status').innerHTML='<strong>'+G.msg+'</strong><br>Enemy: '+FACTIONS[G.enemy].name;else $('status').innerHTML='<strong>Next hostile deployment: '+Math.ceil(G.wave)+'s</strong><br>Workers remaining: '+own.filter(u=>u.type==='worker').length}
+function unitName(u){let f=FACTIONS[u.side?G.enemy:G.faction];return u.type==='worker'?f.worker:u.type==='hq'?'Command Core':u.type==='turret'?f.turret:f[u.type].name}
+function draw(){
+ X.clearRect(0,0,W,H);let bg=X.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#101d21');bg.addColorStop(1,'#071114');X.fillStyle=bg;X.fillRect(0,0,W,H);
+ X.strokeStyle='rgba(105,170,175,.08)';X.lineWidth=1;for(let x=0;x<W;x+=40){X.beginPath();X.moveTo(x,0);X.lineTo(x,H);X.stroke()}for(let y=0;y<H;y+=40){X.beginPath();X.moveTo(0,y);X.lineTo(W,y);X.stroke()}
+ // terrain bands
+ X.fillStyle='rgba(53,90,82,.16)';X.beginPath();X.moveTo(0,350);X.bezierCurveTo(240,290,360,410,570,320);X.bezierCurveTo(730,250,820,260,960,230);X.lineTo(960,335);X.bezierCurveTo(720,350,610,420,430,445);X.bezierCurveTo(220,470,100,410,0,455);X.fill();
+ for(const n of G.nodes){X.save();X.translate(n.x,n.y);let a=.6+Math.sin(G.time*2+n.x)*.2;X.fillStyle=`rgba(91,225,217,${a*.13})`;X.beginPath();X.arc(0,0,35,0,7);X.fill();X.strokeStyle='#52b9b4';X.lineWidth=2;for(let i=0;i<5;i++){let ang=i*1.256;X.beginPath();X.moveTo(Math.cos(ang)*5,Math.sin(ang)*5);X.lineTo(Math.cos(ang)*18,Math.sin(ang)*18);X.stroke()}X.fillStyle='#b6ffef';X.beginPath();X.arc(0,0,5,0,7);X.fill();X.font='9px IBM Plex Mono';X.fillStyle='#6ea5a5';X.textAlign='center';X.fillText(Math.ceil(n.v)+' FLUX',0,48);X.restore()}
+ for(const u of G.units.filter(u=>!u.dead)){drawUnit(u)}
+ for(const s of G.shots){X.strokeStyle=s.color;X.lineWidth=2;X.beginPath();X.moveTo(s.sx,s.sy);X.lineTo(s.x,s.y);X.stroke();X.fillStyle='#fff';X.fillRect(s.x-2,s.y-2,4,4)}
+ for(const s of G.sparks){X.globalAlpha=s.life;X.fillStyle=s.color;X.fillRect(s.x,s.y,3,3)}X.globalAlpha=1;
+ if(drag){X.strokeStyle='#bffcff';X.fillStyle='rgba(100,220,230,.08)';X.setLineDash([5,4]);let x=Math.min(drag.x,mouse.x),y=Math.min(drag.y,mouse.y),w=Math.abs(mouse.x-drag.x),h=Math.abs(mouse.y-drag.y);X.fillRect(x,y,w,h);X.strokeRect(x,y,w,h);X.setLineDash([])}
+ if(mode==='build'){X.strokeStyle='#62d3da';X.beginPath();X.arc(mouse.x,mouse.y,20,0,7);X.stroke()} if(mode==='phase'){X.strokeStyle='#e0c45a';X.setLineDash([4,4]);X.beginPath();X.arc(mouse.x,mouse.y,38,0,7);X.stroke();X.setLineDash([])}
+}
+function drawUnit(u){let f=FACTIONS[u.side?G.enemy:G.faction],c=f.color;X.save();X.translate(u.x,u.y);if(u.selected){X.strokeStyle='#eafefe';X.lineWidth=1.5;X.beginPath();X.ellipse(0,3,u.r+7,u.r*.72+5,0,0,7);X.stroke()}if(u.pulse){X.globalAlpha=.2;X.fillStyle=c;X.beginPath();X.arc(0,0,u.r+u.pulse*2,0,7);X.fill();X.globalAlpha=1}
+ if(u.type==='hq'){X.fillStyle='#10282e';X.strokeStyle=c;X.lineWidth=4;poly(6,31,.52);X.fill();X.stroke();X.fillStyle=c;poly(6,12,0);X.fill();}
+ else if(u.type==='turret'){X.fillStyle='#13272b';X.strokeStyle=c;X.lineWidth=3;X.fillRect(-15,-15,30,30);X.strokeRect(-15,-15,30,30);X.rotate(G.time*.35*(u.side?-1:1));X.fillStyle=c;X.fillRect(-3,-22,6,27)}
+ else if(u.type==='worker'){X.rotate(Math.PI/4);X.fillStyle=c;X.fillRect(-7,-7,14,14);X.fillStyle='#d9ffff';X.fillRect(-2,-2,4,4)}
+ else{X.fillStyle=u.side?f.dark:'#102428';X.strokeStyle=c;X.lineWidth=2.5;if(G.faction==='swarm'&&!u.side||G.enemy==='swarm'&&u.side){X.beginPath();X.moveTo(u.r,0);X.lineTo(-u.r*.7,u.r*.8);X.lineTo(-u.r*.35,0);X.lineTo(-u.r*.7,-u.r*.8);X.closePath();X.fill();X.stroke()}else{poly(u.type==='u2'?6:4,u.r,.7);X.fill();X.stroke()}X.fillStyle=c;X.font='600 10px Chakra Petch';X.textAlign='center';X.textBaseline='middle';X.fillText(u.mark,0,0)}
+ X.fillStyle='rgba(0,0,0,.7)';X.fillRect(-u.r,-u.r-8,u.r*2,3);X.fillStyle=u.hp/u.max>.45?'#58d78f':'#ff6d5c';X.fillRect(-u.r,-u.r-8,u.r*2*Math.max(0,u.hp/u.max),3);X.restore()}
+function poly(n,r,rot=0){X.beginPath();for(let i=0;i<n;i++){let a=rot+i*Math.PI*2/n;let x=Math.cos(a)*r,y=Math.sin(a)*r;i?X.lineTo(x,y):X.moveTo(x,y)}X.closePath()}
+function loop(t){let dt=Math.min(.04,(t-last)/1000);last=t;update(dt);draw();raf=requestAnimationFrame(loop)}
+function pos(e){let r=C.getBoundingClientRect(),p=e.touches?e.touches[0]:e;return{x:(p.clientX-r.left)*W/r.width,y:(p.clientY-r.top)*H/r.height}}
+C.addEventListener('pointerdown',e=>{if(!G||G.result)return;let p=pos(e);mouse=p;if(e.button===2){order(p.x,p.y,true);return}if(mode){order(p.x,p.y,mode==='attack');return}drag={...p}});
+C.addEventListener('pointermove',e=>{mouse=pos(e)});
+C.addEventListener('pointerup',e=>{if(!G||!drag)return;let p=pos(e),d=Math.hypot(p.x-drag.x,p.y-drag.y);if(d<9){let u=nearest(p,0,25);if(!e.shiftKey)G.units.forEach(v=>v.selected=false);if(u)u.selected=true;else if(G.units.some(v=>v.selected))order(p.x,p.y,false)}else{let x1=Math.min(p.x,drag.x),x2=Math.max(p.x,drag.x),y1=Math.min(p.y,drag.y),y2=Math.max(p.y,drag.y);if(!e.shiftKey)G.units.forEach(v=>v.selected=false);G.units.filter(u=>!u.side&&!u.dead&&u.x>x1&&u.x<x2&&u.y>y1&&u.y<y2).forEach(u=>u.selected=true)}drag=null});C.addEventListener('contextmenu',e=>e.preventDefault());
+document.querySelectorAll('.faction').forEach(b=>b.onclick=()=>{chosen=b.dataset.faction;document.querySelectorAll('.faction').forEach(x=>x.classList.toggle('selected',x===b));$('launch').disabled=false;$('launch').textContent='DEPLOY '+FACTIONS[chosen].name.toUpperCase()});
+$('launch').onclick=reset;$('again').onclick=()=>{$('end').classList.add('hidden');$('start').classList.remove('hidden');G=null;cancelAnimationFrame(raf);$('flux').textContent=$('army').textContent=$('core').textContent='—'};$('unit1').onclick=()=>buy('u1');$('unit2').onclick=()=>buy('u2');$('turret').onclick=()=>buy('turret');$('ability').onclick=useAbility;$('move').onclick=()=>activeMode('move');$('attack').onclick=()=>activeMode('attack');$('selectAll').onclick=selectArmy;$('hold').onclick=()=>{if(G){G.units.filter(u=>u.selected).forEach(u=>{u.tx=u.x;u.ty=u.y;u.hold=true});say('Selected units holding position.')}};
+addEventListener('keydown',e=>{if(!G||['INPUT','TEXTAREA'].includes(e.target.tagName))return;let k=e.key.toLowerCase();if(k==='1')buy('u1');if(k==='2')buy('u2');if(k==='3')buy('turret');if(k==='q')useAbility();if(k==='m')activeMode('move');if(k==='a')activeMode('attack');if(k==='e')selectArmy();if(k==='h')$('hold').click()});
+// quiet animated backdrop before deployment
+(function idle(t){if(G)return;X.fillStyle='#071216';X.fillRect(0,0,W,H);X.strokeStyle='rgba(80,190,195,.1)';for(let x=0;x<W;x+=40){X.beginPath();X.moveTo(x,0);X.lineTo(x,H);X.stroke()}for(let y=0;y<H;y+=40){X.beginPath();X.moveTo(0,y);X.lineTo(W,y);X.stroke()}raf=requestAnimationFrame(idle)})(0);
+})();
+</script>
+</body>
+</html>
