@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>Enders Game</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+    :root{
+      color-scheme:light dark;
+      --bg:#e8edf0; --panel:#f7f9fa; --panel2:#dce4e8; --ink:#101820; --muted:#51616d;
+      --line:#9aabb5; --cyan:#007d8d; --cyan2:#00a5b8; --orange:#c94f18; --amber:#e89927;
+      --canvas:#07141f; --shadow:rgba(10,25,35,.18);
+    }
+    @media(prefers-color-scheme:dark){
+      :root{--bg:#091018;--panel:#111b24;--panel2:#172530;--ink:#eff7f8;--muted:#9babb5;--line:#334652;--cyan:#24b8c6;--cyan2:#56d9df;--orange:#ff7343;--amber:#ffc15a;--canvas:#030b12;--shadow:rgba(0,0,0,.4)}
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;overscroll-behavior:none}
+    body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink);padding:14px;touch-action:manipulation}
+    button{font:inherit;color:inherit}
+    .shell{width:min(1500px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:start}
+    .game-wrap{position:relative;background:var(--canvas);border:1px solid var(--line);box-shadow:0 16px 42px var(--shadow);overflow:hidden;min-width:0}
+    .topbar{height:54px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:15px;position:relative;z-index:4}
+    .rank{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:21px;letter-spacing:.03em;white-space:nowrap}
+    .mission{font-family:'Barlow Condensed',sans-serif;font-size:17px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .mission strong{color:var(--cyan)}
+    .stats{margin-left:auto;display:flex;gap:16px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:18px;white-space:nowrap}
+    .stats span{display:inline-flex;align-items:center;gap:6px}
+    .dot{width:9px;height:9px;border-radius:50%;background:var(--cyan2);box-shadow:0 0 8px var(--cyan2)}
+    .dot.orange{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+    .arena{position:relative;width:100%;aspect-ratio:16/9;max-height:calc(100vh - 86px);min-height:520px;background:#04101a}
+    canvas{width:100%;height:100%;display:block;touch-action:none}
+    .scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(80,190,200,.025) 4px);mix-blend-mode:screen}
+    .overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(2,10,16,.78);z-index:5;padding:24px;transition:opacity .2s}
+    .overlay.hidden{opacity:0;pointer-events:none}
+    .brief{width:min(560px,100%);background:var(--panel);border-top:5px solid var(--orange);box-shadow:0 20px 70px rgba(0,0,0,.55);padding:26px}
+    .kicker{font-family:'Barlow Condensed',sans-serif;color:var(--orange);font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:13px}
+    .brief h1{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-size:clamp(36px,6vw,62px);line-height:.88;letter-spacing:-.025em;margin:8px 0 15px}
+    .brief p{line-height:1.5;color:var(--muted);margin:0 0 18px}
+    .orders{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px}
+    .order{background:var(--panel2);padding:10px 11px;border-left:3px solid var(--cyan);font-size:13px;line-height:1.25}
+    .order b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:16px;text-transform:uppercase;color:var(--ink);margin-bottom:2px}
+    .touch-copy{display:none}
+    .primary{position:relative;z-index:1;pointer-events:auto;touch-action:manipulation;user-select:none;border:0;background:var(--orange);color:white;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;clip-path:polygon(0 0,94% 0,100% 35%,100% 100%,6% 100%,0 65%)}
+    .primary:hover{background:#e5632d}.primary:focus-visible,.icon-btn:focus-visible,.level-btn:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+    .side{background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 30px var(--shadow);padding:17px}
+    .side h2{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:23px;text-transform:uppercase;margin:0 0 12px;border-bottom:1px solid var(--line);padding-bottom:9px}
+    .level-list{display:grid;gap:7px}
+    .level-btn{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding:9px 7px;display:grid;grid-template-columns:31px 1fr auto;align-items:center;gap:8px;cursor:pointer}
+    .level-btn:hover:not(:disabled){background:var(--panel2)}.level-btn:disabled{opacity:.48;cursor:not-allowed}.level-btn.active{background:var(--panel2);border-left:4px solid var(--orange);padding-left:3px}
+    .num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--cyan)}
+    .level-btn>span:nth-child(2){min-width:0}.lvl-name{display:block;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;line-height:1.05;overflow-wrap:anywhere}.lvl-sub{display:block;font-size:11px;color:var(--muted);margin-top:3px}.stars{font-size:12px;letter-spacing:-1px;color:var(--amber)}
+    .intel{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.45}.intel strong{color:var(--ink)}
+    .keyrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.key{font-family:'Barlow Condensed',sans-serif;font-weight:700;background:var(--panel2);border:1px solid var(--line);min-width:27px;text-align:center;padding:3px 6px;color:var(--ink)}
+    .mobile-controls{display:none;position:absolute;inset:0;pointer-events:none;z-index:3}
+    .stick{position:absolute;bottom:18px;left:18px;width:112px;height:112px;border-radius:50%;border:2px solid rgba(91,221,229,.48);background:rgba(3,15,24,.52);pointer-events:auto;touch-action:none}.nub{position:absolute;width:46px;height:46px;border-radius:50%;left:31px;top:31px;background:rgba(91,221,229,.72);border:2px solid #baf9fb}
+    .fire{position:absolute;right:19px;bottom:24px;width:86px;height:86px;border-radius:50%;border:3px solid #ffc15a;background:rgba(201,79,24,.78);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;pointer-events:auto;touch-action:none}
+    .pause{position:absolute;right:12px;top:12px;width:38px;height:38px;border:1px solid rgba(165,216,222,.5);background:rgba(4,16,26,.7);color:white;font-size:17px;z-index:4;cursor:pointer}
+    .command-deck{position:absolute;left:12px;top:12px;z-index:4;display:flex;align-items:stretch;background:rgba(3,15,24,.88);border:1px solid rgba(127,191,199,.42);box-shadow:0 8px 20px rgba(0,0,0,.26)}
+    .command-label{display:flex;align-items:center;padding:0 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;color:#9ec2c7;text-transform:uppercase;border-right:1px solid rgba(127,191,199,.34)}
+    .command-btn{border:0;border-right:1px solid rgba(127,191,199,.24);background:transparent;color:#d8eef0;min-width:76px;padding:9px 10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;cursor:pointer}
+    .command-btn:last-child{border-right:0}.command-btn:hover{background:rgba(75,180,190,.18)}.command-btn.active{background:var(--cyan);color:white}.command-btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+    .toast{position:absolute;left:50%;top:15%;transform:translateX(-50%);background:rgba(3,15,24,.9);border-top:3px solid var(--amber);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(20px,3vw,34px);text-transform:uppercase;letter-spacing:.04em;padding:10px 18px;z-index:4;opacity:0;pointer-events:none;white-space:nowrap}.toast.show{animation:toast 1.5s ease}
+    @keyframes toast{0%{opacity:0;transform:translate(-50%,-8px)}15%,75%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+    @media(max-width:850px){body{padding:8px}.shell{display:block}.side{margin-top:10px}.level-list{grid-template-columns:repeat(3,1fr)}.level-btn{grid-template-columns:25px 1fr;padding:7px 4px}.stars{display:none}.lvl-name{font-size:15px}.lvl-sub{display:none}.arena{min-height:440px;max-height:none}.mobile-controls{display:block}.keyrow{display:none}.intel{margin-top:12px}.topbar{height:48px}.rank{font-size:18px}.mission{display:none}.stats{font-size:16px;gap:10px}.command-deck{top:8px;left:8px}.command-label{display:none}.command-btn{min-width:68px;padding:8px;font-size:15px}}
+    @media(max-width:520px){body{padding:0}.game-wrap,.side{border-left:0;border-right:0}.topbar{padding:0 9px}.rank{font-size:17px}.stats{font-size:15px;gap:8px}.arena{aspect-ratio:auto;height:min(72vh,620px);min-height:460px}.brief{padding:20px}.brief h1{font-size:42px}.orders{grid-template-columns:1fr}.order:nth-child(4){display:none}.desktop-copy{display:none}.touch-copy{display:inline}.side{margin-top:0;padding:13px}.side h2{font-size:20px}.level-list{grid-template-columns:repeat(2,1fr)}.command-btn{min-width:62px;padding:7px 6px;font-size:14px}.toast{width:max-content;max-width:calc(100% - 32px);white-space:normal;text-align:center;font-size:20px}}
+    @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="game-wrap" aria-label="Zero gravity battle arena game">
+      <div class="topbar">
+        <div class="rank">LAUNCHIE <span id="callsign">07</span></div>
+        <div class="mission">MISSION: <strong id="missionText">TAKE THE ENEMY GATE</strong></div>
+        <div class="stats"><span><i class="dot"></i><b id="score">0000</b></span><span><i class="dot orange"></i><b id="lives">3</b></span></div>
+      </div>
+      <div class="arena" id="arena">
+        <canvas id="game" aria-label="Zero-gravity laser-tag arena. Move, aim, and tag enemy soldiers."></canvas>
+        <div class="scanlines"></div>
+        <button class="pause" id="pauseBtn" aria-label="Pause game">Ⅱ</button>
+        <div class="command-deck" aria-label="Squad commands">
+          <span class="command-label">Squad order</span>
+          <button class="command-btn active" id="attackBtn" aria-pressed="true">Attack</button>
+          <button class="command-btn" id="defendBtn" aria-pressed="false">Defend</button>
+          <button class="command-btn doctor-command" id="doctorBtn" aria-label="Fire the Little Doctor" hidden>MD Pulse</button>
+        </div>
+        <div class="toast" id="toast">Battle ready</div>
+        <div class="mobile-controls" aria-label="Touch controls">
+          <div class="stick" id="stick"><div class="nub" id="nub"></div></div>
+          <button class="fire" id="fireBtn">FIRE</button>
+        </div>
+        <div class="overlay" id="overlay">
+          <div class="brief">
+            <div class="kicker" id="overlayKicker">Battle School • Training Deck</div>
+            <h1 id="overlayTitle">The enemy's gate is down.</h1>
+            <p id="overlayText">Lead one soldier through the enemy gate to win. Order an attack to push forward, or defend to pull your squad back into formation.</p>
+            <div class="orders">
+              <div class="order"><b>Move</b><span class="desktop-copy">WASD or arrow keys</span><span class="touch-copy">Use the touch stick</span></div>
+              <div class="order"><b>Aim + fire</b><span class="desktop-copy">Mouse + click or Space</span><span class="touch-copy">Tap FIRE to auto-aim</span></div>
+              <div class="order"><b>Squad orders</b><span class="desktop-copy">1 Attack · 2 Defend</span><span class="touch-copy">Tap Attack or Defend</span></div>
+              <div class="order"><b>Command School</b>Press E or tap MD Pulse to fire the Little Doctor</div>
+            </div>
+            <button class="primary" id="startBtn" type="button">Enter the battle room</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="side">
+      <h2>Battle &amp; Command School</h2>
+      <div class="level-list" id="levelList"></div>
+      <div class="intel"><strong>COMMANDER'S NOTE</strong><br>Enemy squads now screen their gate, intercept runners, flank exposed soldiers, dodge incoming fire, and lead moving targets. On the ice, hold the hidden squad until the Bugger ships commit. In the final mission, screen the Little Doctor through two coordinated armadas.</div>
+      <div class="keyrow" aria-label="Keyboard controls"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">SPACE</span><span class="key">1 ATK</span><span class="key">2 DEF</span><span class="key">E MD</span><span class="key">P</span></div>
+    </aside>
+  </main>
+<script>
+(() => {
+  const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+  const arena=document.getElementById('arena'),overlay=document.getElementById('overlay');
+  const title=document.getElementById('overlayTitle'),text=document.getElementById('overlayText'),kicker=document.getElementById('overlayKicker'),startBtn=document.getElementById('startBtn');
+  const scoreEl=document.getElementById('score'),livesEl=document.getElementById('lives'),missionEl=document.getElementById('missionText'),toast=document.getElementById('toast'),rankEl=document.querySelector('.rank');
+  const levelList=document.getElementById('levelList'),attackBtn=document.getElementById('attackBtn'),defendBtn=document.getElementById('defendBtn'),doctorBtn=document.getElementById('doctorBtn');
+  const levels=[
+    {name:'Orientation',sub:'6 vs 8',type:'battle',allies:5,enemies:8,speed:.76,cover:7,enemyHp:1,aggression:.82,aim:.46},
+    {name:'Hook Formation',sub:'7 vs 10',type:'battle',allies:6,enemies:10,speed:.88,cover:9,enemyHp:1,aggression:.92,aim:.55},
+    {name:'Split Command',sub:'8 vs 12',type:'battle',allies:7,enemies:12,speed:1.00,cover:11,enemyHp:2,aggression:1.02,aim:.64},
+    {name:'Dragon Trial',sub:'9 vs 14',type:'battle',allies:8,enemies:14,speed:1.12,cover:13,enemyHp:2,aggression:1.12,aim:.72},
+    {name:'Final Exam',sub:'13 vs 10 + 10',type:'battle',allies:12,enemies:20,speed:1.23,cover:15,twoArmies:true,enemyHp:2,aggression:1.22,aim:.78},
+    {name:'Ice Ambush',sub:'2 fleets · stealth',type:'ice',allies:14,enemies:18,speed:1.10,cover:16,commandSchool:true,enemyHp:2,aggression:1.10,aim:.72},
+    {name:'Armada Breaker',sub:'Little Doctor',type:'fleet',allies:12,enemies:22,speed:1.18,cover:10,commandSchool:true,doctor:true,enemyHp:3,aggression:1.20,aim:.80},
+    {name:'Homeworld',sub:'2 waves · escort',type:'homeworld',allies:15,enemies:18,wave2:28,speed:1.27,cover:8,commandSchool:true,doctor:true,enemyHp:3,aggression:1.30,aim:.88}
+  ];
+  let W=960,H=600,worldW=1480,worldH=820,dpr=1,state='intro',level=0,unlocked=levels.length,score=0,lives=3,last=0,shake=0,gateHold=0,command='attack';
+  let player,doctor=null,actors=[],shots=[],particles=[],blocks=[],stars=[],camera={x:0,y:0},completed=new Set();
+  let elapsed=0,ambushTriggered=false,ambushReady=false,wave=1,wavePending=false,planetHit=0,mdCharge=1,mdCooldown=0;
+  const keys={},pointer={x:720,y:300,down:false},touchMove={x:0,y:0};
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  const L=()=>levels[level];
+  const isHostile=a=>a&&a.team.indexOf('enemy')===0;
+  const isCommand=()=>L().commandSchool;
+
+  function configureCommands(){
+    if(L().type==='ice'){attackBtn.textContent='Feint';defendBtn.textContent='Ambush'}
+    else if(L().type==='homeworld'){attackBtn.textContent='Advance';defendBtn.textContent='Hold'}
+    else if(L().commandSchool){attackBtn.textContent='Engage';defendBtn.textContent='Screen'}
+    else{attackBtn.textContent='Attack';defendBtn.textContent='Defend'}
+    doctorBtn.hidden=!L().doctor;
+  }
+  function setCommand(next,announce=true){
+    command=next;attackBtn.classList.toggle('active',next==='attack');defendBtn.classList.toggle('active',next==='defend');
+    attackBtn.setAttribute('aria-pressed',next==='attack');defendBtn.setAttribute('aria-pressed',next==='defend');
+    if(L().type==='ice'&&next==='defend'&&!ambushTriggered){
+      if(ambushReady){ambushTriggered=true;actors.filter(a=>a.buried).forEach(a=>{a.buried=false;a.vy=-90});missionEl.textContent='AMBUSH SPRUNG — CLEAR THE BUGGER FLEET';showToast('Ice squad: fire from below')}
+      else if(announce){showToast('Hold stealth — let the feint draw them in')}
+    }else if(announce&&state==='playing'){
+      const copy=L().type==='homeworld'?(next==='attack'?'Little Doctor: advance':'Little Doctor: hold position'):(next==='attack'?'Fleet: engage':'Fleet: defensive screen');showToast(copy)
+    }
+  }
+  attackBtn.onclick=()=>setCommand('attack');defendBtn.onclick=()=>setCommand('defend');doctorBtn.onclick=()=>fireDoctor();
+
+  function buildLevels(){
+    levelList.innerHTML='';levels.forEach((l,i)=>{const b=document.createElement('button');b.className='level-btn '+(i===level?'active':'');b.disabled=i>=unlocked;b.innerHTML=`<span class="num">${String(i+1).padStart(2,'0')}</span><span><span class="lvl-name">${l.name}</span><span class="lvl-sub">${l.sub}</span></span><span class="stars">${completed.has(i)?'◆':'◇'}</span>`;b.onclick=()=>{level=i;beginLevel()};levelList.appendChild(b)})
+  }
+  buildLevels();
+
+  function resize(){const r=arena.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);W=r.width;H=r.height;worldW=Math.max(isCommand()?1680:1380,W*(isCommand()?1.78:1.55));worldH=Math.max(isCommand()?920:780,H*(isCommand()?1.48:1.38));ctx.setTransform(dpr,0,0,dpr,0,0);makeStars()}
+  function makeStars(){stars=Array.from({length:220},(_,i)=>({x:(i*83.7)%worldW,y:(i*47.3)%worldH,r:i%11===0?1.4:.6,a:.18+(i%5)*.1}))}
+  window.addEventListener('resize',resize);
+
+  function entity(x,y,team,ai=false,kind='soldier'){
+    const hostile=team.indexOf('enemy')===0;
+    const hp=kind==='doctor'?10:kind==='ship'?(team==='player'?6:hostile?(L().enemyHp||2):3):(team==='player'?3:team==='friend'?2:(L().enemyHp||1));
+    return{x,y,vx:0,vy:0,r:kind==='doctor'?18:kind==='ship'?(team==='player'?15:13):(team==='player'?13:11),team,ai,kind,alive:true,freeze:0,cool:0,angle:hostile?Math.PI:0,hp,maxHp:hp,buried:false,front:false,aiRole:'interceptor',squad:0,slot:0}
+  }
+  function assignEnemyRole(e,i){const roles=['interceptor','flanker','anchor','hunter'];e.aiRole=roles[i%roles.length];e.squad=Math.floor(i/3);e.slot=i%3;return e}
+  function addEnemies(count,second=false,edge=false){
+    for(let i=0;i<count;i++){
+      const col=i%7,row=Math.floor(i/7),x=edge?worldW*(.82+(i%3)*.045):worldW*(.68+col*.038),y=worldH*(.12+row*.16)+(i%2)*22;
+      const e=assignEnemyRole(entity(x,clamp(y,80,worldH-80),second?'enemy2':'enemy',true,isCommand()?'ship':'soldier'),i+(second?2:0));e.vx=edge?-45:0;actors.push(e)
+    }
+  }
+  function reset(){
+    shots=[];particles=[];actors=[];blocks=[];doctor=null;gateHold=0;camera.x=camera.y=0;elapsed=0;ambushTriggered=false;ambushReady=false;wave=1;wavePending=false;planetHit=0;mdCharge=1;mdCooldown=0;lives=3;livesEl.textContent=lives;setCommand('attack',false);
+    const cfg=L(),kind=cfg.commandSchool?'ship':'soldier';player=entity(worldW*.09,worldH*.5,'player',false,kind);actors.push(player);
+    if(cfg.type==='ice'){
+      for(let i=0;i<7;i++){const a=entity(worldW*(.18+(i%3)*.055),worldH*(.31+(i%3)*.12),'friend',true,'ship');a.front=true;actors.push(a)}
+      for(let i=0;i<7;i++){const a=entity(worldW*(.42+(i%4)*.07),worldH*(.72+(i%2)*.055),'friend',true,'ship');a.buried=true;actors.push(a)}
+    }else{
+      for(let i=0;i<cfg.allies;i++){const col=i%3,row=Math.floor(i/3),y=cfg.twoArmies?.18+row*.115:.23+row*.13;actors.push(entity(worldW*(.075+col*.044),worldH*y,'friend',true,kind))}
+    }
+    if(cfg.doctor){doctor=entity(worldW*.24,worldH*.52,'friend',true,'doctor');actors.push(doctor)}
+    if(cfg.twoArmies){
+      const half=cfg.enemies/2;for(let i=0;i<cfg.enemies;i++){const second=i>=half,j=i%half,col=j%5,row=Math.floor(j/5);actors.push(assignEnemyRole(entity(worldW*(.68+col*.055),worldH*(second?.61:.15)+row*worldH*.13,second?'enemy2':'enemy',true,'soldier'),j+(second?2:0)))}
+    }else addEnemies(cfg.enemies,false,false);
+    for(let i=0;i<cfg.cover;i++){
+      const ang=i*2.19+level*.5,ring=.11+(i%4)*.06;let x=worldW*.5+Math.cos(ang)*worldW*ring,y=worldH*.5+Math.sin(ang)*worldH*(.15+(i%3)*.1);
+      if(cfg.type==='ice'){x=worldW*(.30+(i%6)*.105);y=worldH*(.43+(i%3)*.12)}
+      blocks.push({x:clamp(x,210,worldW-210),y:clamp(y,85,worldH-85),r:(cfg.type==='ice'?38:25)+(i%3)*7,ice:cfg.type==='ice'})
+    }
+  }
+  function beginLevel(){
+    resize();reset();configureCommands();state='playing';overlay.classList.add('hidden');rankEl.innerHTML=(isCommand()?'COMMANDER ':'LAUNCHIE ')+'<span id="callsign">07</span>';
+    if(L().type==='ice')missionEl.textContent='STEALTH BELOW THE ICE — FRONT FLEET FEINTS';
+    else if(L().type==='fleet')missionEl.textContent='USE THE LITTLE DOCTOR TO BREAK THE ARMADA';
+    else if(L().type==='homeworld')missionEl.textContent='FIRST ARMADA — KEEP THE LITTLE DOCTOR ALIVE';
+    else missionEl.textContent=L().twoArmies?'TWO ARMIES AGAINST ONE — TAKE THEIR GATE':'GET ONE SOLDIER THROUGH THE GATE';
+    document.querySelectorAll('.level-btn').forEach((b,i)=>b.classList.toggle('active',i===level));
+    showToast(isCommand()?`Command School 0${level-4} — ${L().name}`:(L().twoArmies?'Final Exam — two armies against one':`Simulation 0${level+1} — ${L().name}`))
+  }
+  function showOverlay(mode){
+    state=mode;overlay.classList.remove('hidden');
+    if(mode==='paused'){kicker.textContent='Simulation suspended';title.textContent='Hold position.';text.textContent='The room is frozen. Resume when you are ready to command.';startBtn.textContent='Resume simulation'}
+    else if(mode==='won'){
+      completed.add(level);kicker.textContent=isCommand()?'Command School • Mission complete':'Victory • Formation complete';
+      if(L().type==='ice'){title.textContent='The ice answered.';text.textContent='The feint drew the Bugger formation low. Your hidden fleet rose through the ice and destroyed it from beneath.'}
+      else if(L().type==='fleet'){title.textContent='Armada broken.';text.textContent='The Little Doctor chained through the first Bugger fleet. The homeworld operation is unlocked.'}
+      else if(L().type==='homeworld'){title.textContent='The homeworld is gone.';text.textContent='You held off the second armada long enough for the Little Doctor to reach firing range.'}
+      else{title.textContent=level===4?'Command School awaits.':'The gate is yours.';text.textContent=level===4?'One soldier reached the gate in every Battle School simulation. The fleet has noticed.':'One soldier crossed the enemy gate. The next formation is unlocked.'}
+      startBtn.textContent=level===levels.length-1?'Replay homeworld mission':'Launch next simulation';buildLevels()
+    }else if(mode==='lost'){
+      kicker.textContent=isCommand()?'Fleet action failed':'Simulation reset';
+      title.textContent=doctor&&!doctor.alive?'The Little Doctor is lost.':'Adapt. Then attack.';
+      text.textContent=doctor&&!doctor.alive?'The device cannot be replaced. Keep interceptors between it and the Bugger swarm.':'Your suit locked up, but commanders learn from every formation. Change your angle and try again.';startBtn.textContent='Retry simulation'
+    }
+  }
+  let primaryPointerHandled=false;
+  function activatePrimary(){if(state==='paused'){beginResume();return}if(state==='won'&&level<levels.length-1)level++;beginLevel()}
+  startBtn.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();primaryPointerHandled=true;activatePrimary()});
+  startBtn.addEventListener('click',e=>{e.stopPropagation();if(primaryPointerHandled){primaryPointerHandled=false;return}activatePrimary()});
+  startBtn.addEventListener('pointercancel',()=>primaryPointerHandled=false);
+  document.getElementById('pauseBtn').onclick=()=>state==='playing'?showOverlay('paused'):state==='paused'&&beginResume();
+  function beginResume(){state='playing';overlay.classList.add('hidden');last=performance.now()}
+
+  window.addEventListener('keydown',e=>{
+    keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+    if(e.code==='KeyP'){state==='playing'?showOverlay('paused'):state==='paused'&&beginResume()}
+    if(e.code==='Digit1')setCommand('attack');if(e.code==='Digit2')setCommand('defend');if(e.code==='KeyE')fireDoctor();if(e.code==='Space'&&state==='playing')shoot(player)
+  });
+  window.addEventListener('keyup',e=>keys[e.code]=false);
+  function mousePos(e){const r=canvas.getBoundingClientRect();pointer.x=e.clientX-r.left;pointer.y=e.clientY-r.top}
+  canvas.addEventListener('pointermove',mousePos);canvas.addEventListener('pointerdown',e=>{mousePos(e);pointer.down=true;if(state==='playing')shoot(player)});window.addEventListener('pointerup',()=>pointer.down=false);
+  const stick=document.getElementById('stick'),nub=document.getElementById('nub');
+  function stickMove(e){e.preventDefault();const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const m=Math.hypot(dx,dy),max=38;if(m>max){dx*=max/m;dy*=max/m}touchMove.x=dx/max;touchMove.y=dy/max;nub.style.transform=`translate(${dx}px,${dy}px)`}
+  stick.addEventListener('pointerdown',e=>{stick.setPointerCapture(e.pointerId);stickMove(e)});stick.addEventListener('pointermove',e=>e.buttons&&stickMove(e));stick.addEventListener('pointerup',()=>{touchMove.x=touchMove.y=0;nub.style.transform=''});
+  const fireBtn=document.getElementById('fireBtn');fireBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(state==='playing'){const target=nearestEnemy(player);if(target)player.angle=Math.atan2(target.y-player.y,target.x-player.x);shoot(player)}});
+
+  function nearestEnemy(a){return actors.filter(x=>x.alive&&isHostile(x)).sort((x,y)=>dist(a,x)-dist(a,y))[0]}
+  function chooseHostileTarget(a){
+    const friendlies=actors.filter(x=>x.alive&&!isHostile(x)&&!x.buried);if(!friendlies.length)return null;
+    if(L().type==='homeworld'&&wave===2&&doctor&&doctor.alive&&a.aiRole!=='hunter')return doctor;
+    if(a.aiRole==='hunter'&&player&&player.alive)return player;
+    if(L().type==='battle'){
+      const runners=friendlies.slice().sort((x,y)=>y.x-x.x);if(a.aiRole==='interceptor'||a.aiRole==='anchor')return runners[Math.min(a.slot,runners.length-1)];
+    }
+    return friendlies[(a.squad+Math.floor(elapsed/3))%friendlies.length];
+  }
+  function hostilePlan(a,target){
+    if(!target)return{point:{x:worldW*.78,y:worldH*(.28+a.slot*.22)},distance:24};
+    const side=(a.squad%2?1:-1),cycle=Math.floor(elapsed/4+a.squad)%3;
+    if(L().type==='battle'){
+      if(a.aiRole==='anchor'&&target.x<worldW*.58)return{point:{x:worldW*(.76+Math.min(a.slot,1)*.06),y:worldH*(.28+a.slot*.22)},distance:28};
+      if(a.aiRole==='flanker')return{point:{x:target.x+45+target.vx*.35,y:clamp(target.y+side*(125+cycle*35),55,worldH-55)},distance:42};
+      if(a.aiRole==='hunter')return{point:target,distance:118};
+      return{point:{x:clamp(target.x+105+target.vx*.42,90,worldW-70),y:clamp(target.y+target.vy*.38,55,worldH-55)},distance:35};
+    }
+    if(a.aiRole==='flanker')return{point:{x:target.x+side*35,y:clamp(target.y+side*(145+cycle*28),55,worldH-55)},distance:38};
+    if(a.aiRole==='anchor')return{point:{x:target.x+95,y:clamp(target.y+(a.slot-1)*105,55,worldH-55)},distance:36};
+    return{point:target,distance:a.aiRole==='hunter'?115:142};
+  }
+  function incomingDodge(a){
+    let x=0,y=0;shots.forEach(s=>{if(s.team!=='friend'||s.life<=0)return;const sp=Math.hypot(s.vx,s.vy)||1,nx=s.vx/sp,ny=s.vy/sp,rx=a.x-s.x,ry=a.y-s.y,ahead=rx*nx+ry*ny,lateral=rx*(-ny)+ry*nx;if(ahead>0&&ahead<145&&Math.abs(lateral)<a.r+24){const side=lateral>=0?1:-1;x+=-ny*side;y+=nx*side}});return{x,y}
+  }
+  function aimAtLead(a,target){
+    const projectileSpeed=a.kind==='ship'?470:400,travel=clamp(dist(a,target)/projectileSpeed,0,.75),skill=L().aim||.5;
+    const tx=target.x+target.vx*travel*skill,ty=target.y+target.vy*travel*skill,jitter=(1-skill)*.16*Math.sin(elapsed*2.4+a.squad*1.7+a.slot);
+    return Math.atan2(ty-a.y,tx-a.x)+jitter
+  }
+  function shoot(a){if(!a||!a.alive||a.buried||a.freeze>0||a.cool>0)return;const hostile=isHostile(a),cadence=hostile?(L().aggression||1):1;a.cool=a.team==='player'?.18:hostile?((a.kind==='ship'?.66:.78)/cadence)*(.88+Math.random()*.22):(a.kind==='ship'?.52:.65);const sp=a.kind==='ship'?470:400;shots.push({x:a.x+Math.cos(a.angle)*18,y:a.y+Math.sin(a.angle)*18,vx:Math.cos(a.angle)*sp,vy:Math.sin(a.angle)*sp,team:hostile?'enemy':'friend',life:1.8});for(let i=0;i<3;i++)particles.push({x:a.x,y:a.y,vx:Math.cos(a.angle)*(30+Math.random()*80)+(Math.random()-.5)*30,vy:Math.sin(a.angle)*(30+Math.random()*80)+(Math.random()-.5)*30,life:.28,c:a.team==='enemy2'?'#ff4e87':hostile?'#ff7043':'#62e8ee'})}
+  function showToast(s){toast.textContent=s;toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show')}
+  function hitBlock(x,y,r=0){return blocks.some(b=>Math.hypot(x-b.x,y-b.y)<b.r+r)}
+  function lineCircle(a,b,c){const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy;if(!l2)return false;let t=((c.x-a.x)*dx+(c.y-a.y)*dy)/l2;t=clamp(t,0,1);return Math.hypot(a.x+t*dx-c.x,a.y+t*dy-c.y)<c.r+4}
+
+  function fireDoctor(){
+    if(state!=='playing'||!doctor||!doctor.alive)return;
+    if(mdCooldown>0||mdCharge<1){showToast(`Little Doctor charging — ${Math.round(mdCharge*100)}%`);return}
+    mdCharge=0;mdCooldown=1.2;shake=9;let hits=0;
+    actors.filter(a=>a.alive&&isHostile(a)&&dist(a,doctor)<330).forEach(a=>{a.hp-=3;hits++;burst(a.x,a.y,a.team==='enemy2'?'#ff4e87':'#ff8b55');if(a.hp<=0){a.alive=false;score+=150}});
+    scoreEl.textContent=String(score).padStart(4,'0');for(let i=0;i<56;i++){const ang=Math.PI*2*i/56,sp=110+Math.random()*210;particles.push({x:doctor.x,y:doctor.y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,life:.8,c:'#d8ffff'})}
+    showToast(hits?`Little Doctor chain reaction — ${hits} ships`:'Little Doctor pulse — no target in range')
+  }
+  function spawnSecondArmada(){wave=2;wavePending=false;addEnemies(L().wave2,true,true);missionEl.textContent='SECOND ARMADA SWARMING — ESCORT THE LITTLE DOCTOR';showToast('Second armada inbound — advance to the homeworld')}
+  function winMission(){if(state!=='playing')return;state='won';score+=1000;scoreEl.textContent=String(score).padStart(4,'0');showOverlay('won')}
+
+  function update(dt){
+    if(state!=='playing')return;elapsed+=dt;mdCooldown=Math.max(0,mdCooldown-dt);if(doctor&&doctor.alive)mdCharge=Math.min(1,mdCharge+dt*(L().type==='homeworld'&&wave===2?.19:.25));
+    if(L().type==='ice'&&!ambushReady&&elapsed>6){ambushReady=true;missionEl.textContent='AMBUSH READY — ORDER THE ICE FLEET TO FIRE';showToast('Bugger ships over the ice — ambush ready')}
+    const accel=isCommand()?260:235,max=isCommand()?190:165,drag=.997;
+    let mx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+touchMove.x,my=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+touchMove.y;const mm=Math.hypot(mx,my)||1;mx/=mm;my/=mm;
+    if(player.alive){player.vx+=mx*accel*dt;player.vy+=my*accel*dt;const vm=Math.hypot(player.vx,player.vy);if(vm>max){player.vx*=max/vm;player.vy*=max/vm}player.vx*=Math.pow(drag,dt*60);player.vy*=Math.pow(drag,dt*60);if(!matchMedia('(pointer:coarse)').matches)player.angle=Math.atan2(pointer.y+camera.y-player.y,pointer.x+camera.x-player.x);if(pointer.down)shoot(player)}
+    actors.forEach((a,idx)=>{
+      a.cool=Math.max(0,a.cool-dt);a.freeze=Math.max(0,a.freeze-dt);if(!a.alive)return;
+      if(a.kind==='doctor'){
+        if(L().type==='homeworld'&&wave===2&&command==='attack'){const tx=worldW-150,ty=worldH*.5,ang=Math.atan2(ty-a.y,tx-a.x),d=Math.hypot(tx-a.x,ty-a.y);if(d>25){a.vx+=Math.cos(ang)*38*dt;a.vy+=Math.sin(ang)*38*dt;a.angle=ang}}
+        else if(player&&dist(a,player)>180){const ang=Math.atan2(player.y-a.y,player.x-a.x);a.vx+=Math.cos(ang)*22*dt;a.vy+=Math.sin(ang)*22*dt;a.angle=ang}
+      }else if(a.ai&&a.freeze<=0){
+        if(a.buried&&!ambushTriggered){a.vx*=.8;a.vy*=.8;return}
+        let target,moveTarget,desired=isCommand()?190:165;
+        if(isHostile(a)){
+          target=chooseHostileTarget(a);const plan=hostilePlan(a,target);moveTarget=plan.point;desired=plan.distance;
+        }else{
+          target=nearestEnemy(a);
+          if(L().type==='ice'&&a.front){moveTarget=target||{x:worldW*.67,y:worldH*.42};desired=target?145:25}
+          else if(command==='attack'){moveTarget=target||{x:worldW-86,y:worldH*.5};desired=target?165:24}
+          else{const anchor=doctor&&doctor.alive?{x:doctor.x-70+(idx%3)*55,y:doctor.y-100+(idx%5)*50}:{x:worldW*.14+(idx%2)*62,y:worldH*(.23+(idx%5)*.135)};moveTarget=target&&dist(a,target)<255?target:anchor;desired=moveTarget===target?180:18}
+        }
+        const aimTarget=target||moveTarget;if(aimTarget)a.angle=isHostile(a)&&target?aimAtLead(a,target):Math.atan2(aimTarget.y-a.y,aimTarget.x-a.x);
+        if(moveTarget){const moveAngle=Math.atan2(moveTarget.y-a.y,moveTarget.x-a.x),d=dist(a,moveTarget);let tx=0,ty=0;if(d>desired){tx=Math.cos(moveAngle);ty=Math.sin(moveAngle)}else if(d<desired*.55){tx=-Math.cos(moveAngle);ty=-Math.sin(moveAngle)}if(isHostile(a)){const dodge=incomingDodge(a);tx+=dodge.x*1.25;ty+=dodge.y*1.25;actors.forEach(other=>{if(other===a||!other.alive||!isHostile(other))return;const near=dist(a,other);if(near>0&&near<58){tx+=(a.x-other.x)/near*.42;ty+=(a.y-other.y)/near*.42}})}tx+=Math.cos(elapsed*1.1+idx)*.22;ty+=Math.sin(elapsed*1.35+idx)*.22;a.vx+=tx*88*L().speed*dt;a.vy+=ty*88*L().speed*dt}
+        if(target&&dist(a,target)<(isHostile(a)?530:480)&&!blocks.some(b=>lineCircle(a,target,b)))shoot(a)
+      }
+      const oldx=a.x,oldy=a.y;a.x+=a.vx*dt;a.y+=a.vy*dt;a.vx*=Math.pow(.998,dt*60);a.vy*=Math.pow(.998,dt*60);if(a.kind!=='doctor'&&hitBlock(a.x,a.y,a.r)){a.x=oldx;a.y=oldy;a.vx*=-.55;a.vy*=-.55}if(a.x<a.r){a.x=a.r;a.vx=Math.abs(a.vx)}if(a.x>worldW-a.r){a.x=worldW-a.r;a.vx=-Math.abs(a.vx)}if(a.y<a.r){a.y=a.r;a.vy=Math.abs(a.vy)}if(a.y>worldH-a.r){a.y=worldH-a.r;a.vy=-Math.abs(a.vy)}
+    });
+    shots.forEach(s=>{
+      s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(hitBlock(s.x,s.y,2))s.life=0;if(s.x<0||s.x>worldW||s.y<0||s.y>worldH)s.life=0;
+      actors.forEach(a=>{if(!a.alive||a.buried||s.life<=0)return;const opposing=(s.team==='enemy'&&!isHostile(a))||(s.team==='friend'&&isHostile(a));if(opposing&&dist(s,a)<a.r+4){s.life=0;a.hp--;burst(a.x,a.y,a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7c4c':'#66eef0');if(a.hp<=0){a.alive=false;a.freeze=99;if(isHostile(a)){score+=100;scoreEl.textContent=String(score).padStart(4,'0')}else if(a.kind==='doctor'){showToast('Little Doctor destroyed');showOverlay('lost')}else if(a.team==='player'){lives--;livesEl.textContent=lives;if(lives<=0){showOverlay('lost')}else setTimeout(()=>{player.alive=true;player.hp=player.maxHp;player.x=worldW*.09;player.y=worldH*.5;player.vx=player.vy=0},700)}}}})
+    });
+    shots=shots.filter(s=>s.life>0);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96});particles=particles.filter(p=>p.life>0);
+    const focus=L().type==='homeworld'&&wave===2&&doctor&&doctor.alive?{x:(player.x+doctor.x)/2,y:(player.y+doctor.y)/2}:player,camX=clamp(focus.x-W*.38,0,Math.max(0,worldW-W)),camY=clamp(focus.y-H*.5,0,Math.max(0,worldH-H));camera.x+=(camX-camera.x)*Math.min(1,dt*5);camera.y+=(camY-camera.y)*Math.min(1,dt*5);
+    const hostiles=actors.filter(a=>a.alive&&isHostile(a));
+    if(L().type==='battle'){
+      const gateRunner=actors.find(a=>a.alive&&!isHostile(a)&&a.x>worldW-64&&a.y>worldH*.36&&a.y<worldH*.64);if(gateRunner){gateHold+=dt;if(gateHold>1)winMission()}else gateHold=Math.max(0,gateHold-dt*2)
+    }else if(L().type==='ice'&&hostiles.length===0)winMission();
+    else if(L().type==='fleet'&&hostiles.length===0)winMission();
+    else if(L().type==='homeworld'){
+      if(wave===1&&hostiles.length===0&&!wavePending){wavePending=true;missionEl.textContent='FIRST ARMADA DESTROYED — SECOND WAVE APPROACHING';showToast('First armada destroyed');setTimeout(()=>{if(state==='playing'&&L().type==='homeworld')spawnSecondArmada()},1250)}
+      if(wave===2&&doctor&&doctor.alive&&doctor.x>worldW-175&&Math.abs(doctor.y-worldH*.5)<95){planetHit+=dt;if(planetHit>.8){shake=12;for(let i=0;i<80;i++){const a=Math.random()*Math.PI*2,s=80+Math.random()*260;particles.push({x:worldW-75,y:worldH*.5,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1.2,c:i%2?'#f8d073':'#7feef3'})}winMission()}}
+    }
+  }
+
+  function burst(x,y,c){shake=5;for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,s=40+Math.random()*140;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.35+Math.random()*.35,c})}}
+  function draw(){
+    ctx.save();if(shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}ctx.translate(-camera.x,-camera.y);
+    const g=ctx.createRadialGradient(worldW*.52,worldH*.45,10,worldW*.52,worldH*.45,Math.max(worldW,worldH)*.7);g.addColorStop(0,L().type==='ice'?'#123345':'#0b2634');g.addColorStop(1,'#020910');ctx.fillStyle=g;ctx.fillRect(0,0,worldW,worldH);
+    stars.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle='#b9f8fa';ctx.fillRect(s.x,s.y,s.r,s.r)});ctx.globalAlpha=1;ctx.strokeStyle='rgba(72,170,180,.13)';ctx.lineWidth=1;for(let x=80;x<worldW;x+=120){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,worldH);ctx.stroke()}for(let y=60;y<worldH;y+=120){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(worldW,y);ctx.stroke()}
+    if(L().type==='battle'){drawGate(18,worldH*.36,36,worldH*.28,'#39d2da',false);drawGate(worldW-54,worldH*.36,36,worldH*.28,'#f4b84b',true)}
+    if(L().type==='homeworld')drawPlanet();
+    blocks.forEach((b,i)=>drawBlock(b,i));
+    if(L().type==='ice'&&!ambushTriggered){ctx.fillStyle='rgba(136,228,240,.08)';ctx.fillRect(0,worldH*.66,worldW,worldH*.23);ctx.strokeStyle='rgba(151,238,246,.32)';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,worldH*.66);for(let x=0;x<worldW;x+=70)ctx.lineTo(x,worldH*.66+Math.sin(x*.025)*12);ctx.stroke()}
+    shots.forEach(s=>{ctx.strokeStyle=s.team==='enemy'?'#ff6d42':'#5de7ee';ctx.lineWidth=3;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=10;ctx.beginPath();ctx.moveTo(s.x-s.vx*.025,s.y-s.vy*.025);ctx.lineTo(s.x,s.y);ctx.stroke();ctx.shadowBlur=0});
+    actors.filter(a=>a.alive||a.freeze>0).forEach(drawActor);particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life*1.6);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,3,3)});ctx.globalAlpha=1;
+    if(L().type==='battle'){ctx.fillStyle='rgba(244,184,75,.16)';ctx.fillRect(worldW-62,worldH*.36,50,worldH*.28);if(gateHold>0){ctx.fillStyle='#f4b84b';ctx.fillRect(worldW-60,worldH*.64,48,-gateHold*worldH*.28)}}ctx.restore();drawRadar()
+  }
+  function drawBlock(b,i){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(i*.8);ctx.fillStyle=b.ice?'#17465a':'#122d3a';ctx.strokeStyle=b.ice?'#83dbe5':'#3e7180';ctx.lineWidth=2;ctx.beginPath();for(let k=0;k<8;k++){const a=Math.PI*2*k/8,r=b.r*(k%2?1:.84);k?ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r):ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle=b.ice?'rgba(203,249,252,.5)':'rgba(95,206,215,.2)';ctx.beginPath();ctx.moveTo(-b.r*.55,0);ctx.lineTo(b.r*.55,0);ctx.stroke();ctx.restore()}
+  function drawPlanet(){const x=worldW-58,y=worldH*.5,r=72;ctx.save();const pg=ctx.createRadialGradient(x-20,y-22,8,x,y,r);pg.addColorStop(0,'#9a7152');pg.addColorStop(1,'#241a18');ctx.fillStyle=pg;ctx.strokeStyle='#c58b5c';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='rgba(242,169,101,.45)';for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(x,y,r-12-i*11,.2+i*.6,2.2+i*.6);ctx.stroke()}ctx.restore()}
+  function drawActor(a){
+    ctx.save();ctx.translate(a.x,a.y);ctx.rotate(a.angle);const enemy=isHostile(a),second=a.team==='enemy2';ctx.globalAlpha=a.buried?.16:(a.freeze>0?.48:1);
+    if(a.kind==='doctor'){
+      ctx.strokeStyle='#e8ffff';ctx.fillStyle='#245766';ctx.lineWidth=3;ctx.shadowColor='#8cf5f3';ctx.shadowBlur=12;ctx.beginPath();for(let i=0;i<6;i++){const ang=i*Math.PI/3,r=i%2?11:19;i?ctx.lineTo(Math.cos(ang)*r,Math.sin(ang)*r):ctx.moveTo(Math.cos(ang)*r,Math.sin(ang)*r)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#d8ffff';ctx.fillRect(-4,-4,8,8);ctx.rotate(-a.angle);ctx.fillStyle='rgba(3,15,24,.85)';ctx.fillRect(-22,27,44,6);ctx.fillStyle=mdCharge>=1?'#ffc15a':'#56d9df';ctx.fillRect(-22,27,44*mdCharge,6);ctx.strokeStyle='#b7e8ea';ctx.strokeRect(-22,27,44,6)
+    }else if(a.kind==='ship'){
+      const c=second?'#ff4e87':enemy?'#ff7146':a.team==='friend'?'#38c4cc':'#d8ffff';ctx.strokeStyle=c;ctx.fillStyle=second?'#56152f':enemy?'#4f211d':a.team==='friend'?'#0b5660':'#1b6d77';ctx.lineWidth=2.5;ctx.shadowColor=c;ctx.shadowBlur=8;
+      ctx.beginPath();if(enemy){ctx.moveTo(18,0);ctx.lineTo(3,-8);ctx.lineTo(-11,-15);ctx.lineTo(-7,-4);ctx.lineTo(-18,0);ctx.lineTo(-7,4);ctx.lineTo(-11,15);ctx.lineTo(3,8)}else{ctx.moveTo(19,0);ctx.lineTo(-12,-12);ctx.lineTo(-5,0);ctx.lineTo(-12,12)}ctx.closePath();ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=c;ctx.fillRect(enemy?-2:1,-2,enemy?15:13,4)
+    }else{
+      const c=second?'#ff4e87':enemy?'#ff7146':a.team==='friend'?'#38c4cc':'#bffaff';ctx.strokeStyle=c;ctx.fillStyle=second?'#5b1632':enemy?'#54251f':a.team==='friend'?'#0c5d66':'#166d77';ctx.lineWidth=2.5;ctx.shadowColor=c;ctx.shadowBlur=8;ctx.beginPath();ctx.arc(0,0,a.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle=c;ctx.fillRect(2,-4,17,8);ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(-7,-8);ctx.lineTo(-15,-15);ctx.moveTo(-7,8);ctx.lineTo(-15,15);ctx.stroke()
+    }
+    if(a.freeze>0){ctx.strokeStyle='#c3fbff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,a.r+6,0,Math.PI*2);ctx.stroke()}ctx.restore()
+  }
+  function drawGate(x,y,w,h,c,open){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=4;ctx.shadowColor=c;ctx.shadowBlur=10;ctx.strokeRect(x,y,w,h);ctx.shadowBlur=0;ctx.fillStyle=open?'rgba(244,184,75,.08)':'rgba(214,78,43,.12)';ctx.fillRect(x+5,y+5,w-10,h-10);for(let i=1;i<4;i++){ctx.strokeStyle=c+'88';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y+h*i/4);ctx.lineTo(x+w,y+h*i/4);ctx.stroke()}ctx.restore()}
+  function drawRadar(){const rw=Math.min(154,W*.28),rh=82,rx=W-rw-16,ry=58,sx=rw/worldW,sy=rh/worldH;ctx.save();ctx.fillStyle='rgba(3,15,24,.82)';ctx.fillRect(rx,ry,rw,rh);ctx.strokeStyle='rgba(142,211,216,.58)';ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);if(L().type==='homeworld'){ctx.fillStyle='#b9794e';ctx.beginPath();ctx.arc(rx+(worldW-58)*sx,ry+worldH*.5*sy,5,0,Math.PI*2);ctx.fill()}else if(L().type==='battle'){ctx.fillStyle='rgba(255,193,90,.55)';ctx.fillRect(rx+rw-5,ry+rh*.36,3,rh*.28)}blocks.forEach(b=>{ctx.fillStyle=b.ice?'rgba(131,219,229,.7)':'rgba(113,151,159,.55)';ctx.fillRect(rx+b.x*sx-1,ry+b.y*sy-1,2,2)});actors.filter(a=>a.alive).forEach(a=>{ctx.fillStyle=a.kind==='doctor'?'#ffffff':a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7343':a.team==='player'?'#ffffff':'#56d9df';const r=a.team==='player'||a.kind==='doctor'?2.5:1.7;ctx.beginPath();ctx.arc(rx+a.x*sx,ry+a.y*sy,r,0,Math.PI*2);ctx.fill()});ctx.strokeStyle='rgba(255,255,255,.45)';ctx.strokeRect(rx+camera.x*sx,ry+camera.y*sy,W*sx,H*sy);ctx.restore()}
+  function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
+  resize();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
