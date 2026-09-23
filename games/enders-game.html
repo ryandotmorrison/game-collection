@@ -124,18 +124,18 @@
   const scoreEl=document.getElementById('score'),livesEl=document.getElementById('lives'),missionEl=document.getElementById('missionText'),toast=document.getElementById('toast'),rankEl=document.querySelector('.rank');
   const levelList=document.getElementById('levelList'),attackBtn=document.getElementById('attackBtn'),defendBtn=document.getElementById('defendBtn'),doctorBtn=document.getElementById('doctorBtn');
   const levels=[
-    {name:'Orientation',sub:'6 vs 8',type:'battle',allies:5,enemies:8,speed:.76,cover:7,enemyHp:1,aggression:.82,aim:.46},
-    {name:'Hook Formation',sub:'7 vs 10',type:'battle',allies:6,enemies:10,speed:.88,cover:9,enemyHp:1,aggression:.92,aim:.55},
-    {name:'Split Command',sub:'8 vs 12',type:'battle',allies:7,enemies:12,speed:1.00,cover:11,enemyHp:2,aggression:1.02,aim:.64},
-    {name:'Dragon Trial',sub:'9 vs 14',type:'battle',allies:8,enemies:14,speed:1.12,cover:13,enemyHp:2,aggression:1.12,aim:.72},
-    {name:'Final Exam',sub:'13 vs 10 + 10',type:'battle',allies:12,enemies:20,speed:1.23,cover:15,twoArmies:true,enemyHp:2,aggression:1.22,aim:.78},
-    {name:'Ice Ambush',sub:'2 fleets · stealth',type:'ice',allies:14,enemies:18,speed:1.10,cover:16,commandSchool:true,enemyHp:2,aggression:1.10,aim:.72},
-    {name:'Armada Breaker',sub:'Little Doctor',type:'fleet',allies:12,enemies:22,speed:1.18,cover:10,commandSchool:true,doctor:true,enemyHp:3,aggression:1.20,aim:.80},
-    {name:'Homeworld',sub:'2 waves · escort',type:'homeworld',allies:15,enemies:18,wave2:28,speed:1.27,cover:8,commandSchool:true,doctor:true,enemyHp:3,aggression:1.30,aim:.88}
+    {name:'Orientation',sub:'6 vs 8',type:'battle',allies:5,enemies:8,speed:.76,cover:7,enemyHp:1,aggression:.75,aim:.41},
+    {name:'Hook Formation',sub:'7 vs 10',type:'battle',allies:6,enemies:10,speed:.88,cover:9,enemyHp:1,aggression:.85,aim:.50},
+    {name:'Split Command',sub:'8 vs 12',type:'battle',allies:7,enemies:12,speed:1.00,cover:11,enemyHp:2,aggression:.94,aim:.58},
+    {name:'Dragon Trial',sub:'9 vs 14',type:'battle',allies:8,enemies:14,speed:1.12,cover:13,enemyHp:2,aggression:1.03,aim:.65},
+    {name:'Final Exam',sub:'13 vs 10 + 10',type:'battle',allies:12,enemies:20,speed:1.23,cover:15,twoArmies:true,enemyHp:2,aggression:1.12,aim:.70},
+    {name:'Ice Ambush',sub:'2 fleets · stealth',type:'ice',allies:14,enemies:18,speed:1.10,cover:16,commandSchool:true,enemyHp:2,aggression:1.01,aim:.65},
+    {name:'Armada Breaker',sub:'Little Doctor',type:'fleet',allies:12,enemies:20,speed:1.18,cover:10,commandSchool:true,doctor:true,enemyHp:3,aggression:1.10,aim:.72},
+    {name:'Homeworld',sub:'2 waves · escort',type:'homeworld',allies:15,enemies:16,wave2:24,speed:1.27,cover:8,commandSchool:true,doctor:true,enemyHp:3,aggression:1.20,aim:.79}
   ];
   let W=960,H=600,worldW=1480,worldH=820,dpr=1,state='intro',level=0,unlocked=levels.length,score=0,lives=3,last=0,shake=0,gateHold=0,command='attack';
   let player,doctor=null,actors=[],shots=[],particles=[],blocks=[],stars=[],camera={x:0,y:0},completed=new Set();
-  let elapsed=0,ambushTriggered=false,ambushReady=false,wave=1,wavePending=false,planetHit=0,mdCharge=1,mdCooldown=0;
+  let elapsed=0,ambushTriggered=false,ambushReady=false,wave=1,wavePending=false,waveTimer=0,planetHit=0,mdCharge=1,mdCooldown=0;
   const keys={},pointer={x:720,y:300,down:false},touchMove={x:0,y:0};
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -184,7 +184,7 @@
     }
   }
   function reset(){
-    shots=[];particles=[];actors=[];blocks=[];doctor=null;gateHold=0;camera.x=camera.y=0;elapsed=0;ambushTriggered=false;ambushReady=false;wave=1;wavePending=false;planetHit=0;mdCharge=1;mdCooldown=0;lives=3;livesEl.textContent=lives;setCommand('attack',false);
+    shots=[];particles=[];actors=[];blocks=[];doctor=null;gateHold=0;camera.x=camera.y=0;elapsed=0;ambushTriggered=false;ambushReady=false;wave=1;wavePending=false;waveTimer=0;planetHit=0;mdCharge=1;mdCooldown=0;lives=3;livesEl.textContent=lives;setCommand('attack',false);
     const cfg=L(),kind=cfg.commandSchool?'ship':'soldier';player=entity(worldW*.09,worldH*.5,'player',false,kind);actors.push(player);
     if(cfg.type==='ice'){
       for(let i=0;i<7;i++){const a=entity(worldW*(.18+(i%3)*.055),worldH*(.31+(i%3)*.12),'friend',true,'ship');a.front=true;actors.push(a)}
@@ -335,7 +335,8 @@
     }else if(L().type==='ice'&&hostiles.length===0)winMission();
     else if(L().type==='fleet'&&hostiles.length===0)winMission();
     else if(L().type==='homeworld'){
-      if(wave===1&&hostiles.length===0&&!wavePending){wavePending=true;missionEl.textContent='FIRST ARMADA DESTROYED — SECOND WAVE APPROACHING';showToast('First armada destroyed');setTimeout(()=>{if(state==='playing'&&L().type==='homeworld')spawnSecondArmada()},1250)}
+      if(wave===1&&hostiles.length===0&&!wavePending){wavePending=true;waveTimer=10;missionEl.textContent='FIRST ARMADA DESTROYED — SECOND ARMADA INBOUND IN 10';showToast('First armada destroyed — 10 seconds to regroup')}
+      if(wavePending&&waveTimer>0){waveTimer-=dt;const s=Math.ceil(Math.max(0,waveTimer));missionEl.textContent='FIRST ARMADA DESTROYED — SECOND ARMADA INBOUND IN '+s;if(waveTimer<=0){waveTimer=0;if(state==='playing'&&L().type==='homeworld')spawnSecondArmada()}}
       if(wave===2&&doctor&&doctor.alive&&doctor.x>worldW-175&&Math.abs(doctor.y-worldH*.5)<95){planetHit+=dt;if(planetHit>.8){shake=12;for(let i=0;i<80;i++){const a=Math.random()*Math.PI*2,s=80+Math.random()*260;particles.push({x:worldW-75,y:worldH*.5,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1.2,c:i%2?'#f8d073':'#7feef3'})}winMission()}}
     }
   }
