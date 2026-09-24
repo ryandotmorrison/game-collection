@@ -124,14 +124,14 @@
   const scoreEl=document.getElementById('score'),livesEl=document.getElementById('lives'),missionEl=document.getElementById('missionText'),toast=document.getElementById('toast'),rankEl=document.querySelector('.rank');
   const levelList=document.getElementById('levelList'),attackBtn=document.getElementById('attackBtn'),defendBtn=document.getElementById('defendBtn'),doctorBtn=document.getElementById('doctorBtn');
   const levels=[
-    {name:'Orientation',sub:'6 vs 8',type:'battle',allies:5,enemies:8,speed:.76,cover:7,enemyHp:1,aggression:.75,aim:.41},
-    {name:'Hook Formation',sub:'7 vs 10',type:'battle',allies:6,enemies:10,speed:.88,cover:9,enemyHp:1,aggression:.85,aim:.50},
-    {name:'Split Command',sub:'8 vs 12',type:'battle',allies:7,enemies:12,speed:1.00,cover:11,enemyHp:2,aggression:.94,aim:.58},
-    {name:'Dragon Trial',sub:'9 vs 14',type:'battle',allies:8,enemies:14,speed:1.12,cover:13,enemyHp:2,aggression:1.03,aim:.65},
-    {name:'Final Exam',sub:'13 vs 10 + 10',type:'battle',allies:12,enemies:20,speed:1.23,cover:15,twoArmies:true,enemyHp:2,aggression:1.12,aim:.70},
-    {name:'Ice Ambush',sub:'2 fleets · stealth',type:'ice',allies:14,enemies:18,speed:1.10,cover:16,commandSchool:true,enemyHp:2,aggression:1.01,aim:.65},
-    {name:'Armada Breaker',sub:'Little Doctor',type:'fleet',allies:12,enemies:20,speed:1.18,cover:10,commandSchool:true,doctor:true,enemyHp:3,aggression:1.10,aim:.72},
-    {name:'Homeworld',sub:'2 waves · escort',type:'homeworld',allies:15,enemies:16,wave2:24,speed:1.27,cover:8,commandSchool:true,doctor:true,enemyHp:3,aggression:1.20,aim:.79}
+    {name:'Orientation',sub:'6 vs 8',type:'battle',allies:5,enemies:8,speed:.684,cover:7,enemyHp:1,aggression:.675,aim:.369},
+    {name:'Hook Formation',sub:'7 vs 10',type:'battle',allies:6,enemies:10,speed:.792,cover:9,enemyHp:1,aggression:.765,aim:.45},
+    {name:'Split Command',sub:'8 vs 12',type:'battle',allies:7,enemies:12,speed:.9,cover:11,enemyHp:2,aggression:.846,aim:.522},
+    {name:'Dragon Trial',sub:'9 vs 14',type:'battle',allies:8,enemies:14,speed:1.008,cover:13,enemyHp:2,aggression:.927,aim:.585},
+    {name:'Final Exam',sub:'13 vs 10 + 10',type:'battle',allies:12,enemies:20,speed:1.107,cover:15,twoArmies:true,enemyHp:2,aggression:1.008,aim:.63},
+    {name:'Ice Ambush',sub:'2 fleets · stealth',type:'ice',allies:14,enemies:18,speed:.99,cover:16,commandSchool:true,enemyHp:2,aggression:.909,aim:.585},
+    {name:'Armada Breaker',sub:'Little Doctor',type:'fleet',allies:12,enemies:20,speed:1.062,cover:10,commandSchool:true,doctor:true,enemyHp:3,aggression:.99,aim:.648},
+    {name:'Homeworld',sub:'2 waves · escort',type:'homeworld',allies:15,enemies:16,wave2:24,speed:1.143,cover:8,commandSchool:true,doctor:true,enemyHp:3,aggression:1.08,aim:.711}
   ];
   let W=960,H=600,worldW=1480,worldH=820,dpr=1,state='intro',level=0,unlocked=levels.length,score=0,lives=3,last=0,shake=0,gateHold=0,command='attack';
   let player,doctor=null,actors=[],shots=[],particles=[],blocks=[],stars=[],camera={x:0,y:0},completed=new Set();
@@ -228,7 +228,7 @@
     }
   }
   let primaryPointerHandled=false;
-  function activatePrimary(){if(state==='paused'){beginResume();return}if(state==='won'&&level<levels.length-1)level++;beginLevel()}
+  function activatePrimary(){if(state==='paused'){beginResume();return}if(state==='playing')return;if(state==='won'&&level<levels.length-1)level++;beginLevel()}
   startBtn.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();primaryPointerHandled=true;activatePrimary()});
   startBtn.addEventListener('click',e=>{e.stopPropagation();if(primaryPointerHandled){primaryPointerHandled=false;return}activatePrimary()});
   startBtn.addEventListener('pointercancel',()=>primaryPointerHandled=false);
@@ -325,7 +325,7 @@
     });
     shots.forEach(s=>{
       s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(hitBlock(s.x,s.y,2))s.life=0;if(s.x<0||s.x>worldW||s.y<0||s.y>worldH)s.life=0;
-      actors.forEach(a=>{if(!a.alive||a.buried||s.life<=0)return;const opposing=(s.team==='enemy'&&!isHostile(a))||(s.team==='friend'&&isHostile(a));if(opposing&&dist(s,a)<a.r+4){s.life=0;a.hp--;burst(a.x,a.y,a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7c4c':'#66eef0');if(a.hp<=0){a.alive=false;a.freeze=99;if(isHostile(a)){score+=100;scoreEl.textContent=String(score).padStart(4,'0')}else if(a.kind==='doctor'){showToast('Little Doctor destroyed');showOverlay('lost')}else if(a.team==='player'){lives--;livesEl.textContent=lives;if(lives<=0){showOverlay('lost')}else setTimeout(()=>{player.alive=true;player.hp=player.maxHp;player.x=worldW*.09;player.y=worldH*.5;player.vx=player.vy=0},700)}}}})
+      actors.forEach(a=>{if(!a.alive||a.buried||s.life<=0)return;const opposing=(s.team==='enemy'&&!isHostile(a))||(s.team==='friend'&&isHostile(a));if(opposing&&dist(s,a)<a.r+4){s.life=0;a.hp--;burst(a.x,a.y,a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7c4c':'#66eef0');if(a.hp<=0){a.alive=false;a.freeze=99;if(isHostile(a)){score+=100;scoreEl.textContent=String(score).padStart(4,'0')}else if(a.kind==='doctor'){showToast('Little Doctor destroyed');showOverlay('lost')}else if(a.team==='player'){lives--;livesEl.textContent=lives;if(lives<=0){showOverlay('lost')}else setTimeout(()=>{player.alive=true;player.hp=player.maxHp;player.freeze=0;player.cool=0;player.x=worldW*.09;player.y=worldH*.5;player.vx=player.vy=0},700)}}}})
     });
     shots=shots.filter(s=>s.life>0);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96});particles=particles.filter(p=>p.life>0);
     const focus=L().type==='homeworld'&&wave===2&&doctor&&doctor.alive?{x:(player.x+doctor.x)/2,y:(player.y+doctor.y)/2}:player,camX=clamp(focus.x-W*.38,0,Math.max(0,worldW-W)),camY=clamp(focus.y-H*.5,0,Math.max(0,worldH-H));camera.x+=(camX-camera.x)*Math.min(1,dt*5);camera.y+=(camY-camera.y)*Math.min(1,dt*5);
