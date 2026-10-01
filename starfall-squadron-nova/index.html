@@ -1068,9 +1068,9 @@ function updateSpace(dt){
     S.waveT+=dt;
     for(const q of S.queue){
       if(!q.done&&S.waveT>=q.at){
-        q.spawned=(q.spawned||0)+1;q.t=(q.t||0)+dt;
-        if(q.t>= (q.gap||1)&&q.spawned<=q.n){q.t=0;spawnFoe(q.type);}
-        if(q.spawned>q.n)q.done=true;
+        q.t=(q.t||0)+dt;
+        if(q.t>=(q.gap||1)&&(q.spawned||0)<q.n){q.t=0;q.spawned=(q.spawned||0)+1;spawnFoe(q.type);}
+        if((q.spawned||0)>=q.n)q.done=true;
       }
     }
     for(const e of S.enemies)foeUpdate(e,dt);
