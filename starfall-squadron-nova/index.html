@@ -123,9 +123,10 @@ let touchActPrev=false,touchBombPrev=false;
 let AC=null,masterGain=null,musicGain=null,sfxGain=null,noiseBuf=null;
 let musicTimer=null,musicStep=0,currentSong=null;
 function initAudio(){
-  if(AC)return;
+  if(AC){if(AC.state==='suspended'){try{AC.resume();}catch(e){}}return;}
   try{
     AC=new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended'){try{AC.resume();}catch(e){}}
     masterGain=AC.createGain();masterGain.gain.value=save.muted?0:0.9;masterGain.connect(AC.destination);
     musicGain=AC.createGain();musicGain.gain.value=0.34;musicGain.connect(masterGain);
     sfxGain=AC.createGain();sfxGain.gain.value=0.5;sfxGain.connect(masterGain);
@@ -549,7 +550,7 @@ function drawHub(dt){
   button(W/2-130,470,260,52,'▶ START MISSION',()=>{
     startStage(G.selStage);
   },{fs:22,color:'#2a6e3a',cl:hubClick});
-  button(20,480,110,40,'🔊/🔇',()=>{setMuted(!save.muted);},{fs:18,cl:hubClick});
+  button(20,480,110,40,save.muted?'🔇 MUTED':'🔊 SOUND',()=>{setMuted(!save.muted);},{fs:18,cl:hubClick});
   if(pressed['enter']||pressed[' '])startStage(G.selStage);
   txt('touch: left side = stick · buttons on right',W/2,528,13,'#555','center');
 }
