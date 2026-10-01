@@ -1,0 +1,67 @@
+/* Search the Egg offline service worker */
+const CACHE = 'search-the-egg-v1';
+const SHELL = [
+  './',
+  './index.html',
+  './manifest.json',
+  './icons/icon-180.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // Google Fonts: cache-first, populate on first online visit so the game
+  // keeps its look when offline.
+  if (url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
+    event.respondWith(
+      caches.open(CACHE).then((cache) =>
+        cache.match(event.request).then(
+          (hit) =>
+            hit ||
+            fetch(event.request).then((res) => {
+              cache.put(event.request, res.clone());
+              return res;
+            })
+        )
+      )
+    );
+    return;
+  }
+
+  // Page navigations: try network, fall back to cached game when offline.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).catch(() => caches.match('./index.html')));
+    return;
+  }
+
+  // App shell: cache-first, then network (and cache same-origin responses).
+  event.respondWith(
+    caches.match(event.request).then(
+      (hit) =>
+        hit ||
+        fetch(event.request).then((res) => {
+          if (url.origin === self.location.origin) {
+            const copy = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+          }
+          return res;
+        })
+    )
+  );
+});
