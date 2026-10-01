@@ -51,15 +51,35 @@
     .card .eggmark:after{content:"✦";position:absolute;right:-12px;top:1px;color:#fff;text-shadow:0 0 6px #90eaff;font-size:1.25rem;line-height:1}
     .card h1{font:700 clamp(1.9rem,5vw,3rem)/.95 "Changa",sans-serif;margin:0 0 10px;letter-spacing:-.03em}
     .card p{margin:0 auto 18px;color:var(--muted);font-size:.98rem;line-height:1.45;max-width:34ch}
-    .primary{border:2px solid #523c00;background:var(--yellow);color:#2b2100;border-radius:10px;padding:11px 24px;font-weight:900;box-shadow:0 5px 0 #a97b00;cursor:pointer;min-width:160px}.primary:active{transform:translateY(4px);box-shadow:0 1px 0 #a97b00}.primary:focus-visible,.touch button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+    .primary{border:2px solid #523c00;background:var(--yellow);color:#2b2100;border-radius:10px;padding:11px 24px;font-weight:900;box-shadow:0 5px 0 #a97b00;cursor:pointer;min-width:160px}.primary:active{transform:translateY(4px);box-shadow:0 1px 0 #a97b00}.primary:focus-visible,.touch button:focus-visible,.action-pad button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
     .tipline{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:5px 4px 0;color:var(--muted);font-size:.83rem;font-weight:700;line-height:1.35}.tipline strong{color:var(--ink)}
     .controls{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;background:var(--panel);border:2px solid var(--line);border-radius:15px;padding:12px 14px}
     .mission{line-height:1.35}.mission strong{display:block;font-size:.95rem}.mission span{color:var(--muted);font-size:.8rem}
     .touch{display:none;grid-template-columns:44px 44px 44px 72px 72px;grid-template-rows:42px 42px;gap:6px;grid-template-areas:". up . grab bat" "left down right grab trap"}
     .touch button{border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:9px;font-weight:900;box-shadow:0 3px 0 var(--line);touch-action:none;user-select:none}.touch button:active,.touch button.active{transform:translateY(2px);box-shadow:0 1px 0 var(--line);background:var(--yellow);color:#241c00}.up{grid-area:up}.left{grid-area:left}.down{grid-area:down}.right{grid-area:right}.grab{grid-area:grab;background:var(--yellow)!important;color:#2b2100!important;border-color:#9c7300!important}.bat{grid-area:bat;background:var(--orange)!important;color:#2b1308!important}.trap{grid-area:trap;background:var(--red)!important;color:#fff!important}
+    .mobile-controls{display:none;position:absolute;inset:0;z-index:2;pointer-events:none;line-height:normal}
+    .joystick-zone{position:absolute;left:max(10px,env(safe-area-inset-left));bottom:max(10px,env(safe-area-inset-bottom));width:clamp(118px,25vw,154px);height:clamp(118px,25vw,154px);border-radius:50%;pointer-events:auto;touch-action:none;user-select:none;background:rgba(10,28,18,.25)}
+    .joystick-ring{position:absolute;left:50%;top:50%;width:78%;height:78%;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.7);border-radius:50%;background:rgba(18,46,30,.55);box-shadow:inset 0 0 0 8px rgba(0,0,0,.08)}
+    .joystick-ring:before,.joystick-ring:after{content:"";position:absolute;background:rgba(255,255,255,.27);border-radius:2px}.joystick-ring:before{width:3px;height:76%;left:calc(50% - 1.5px);top:12%}.joystick-ring:after{height:3px;width:76%;top:calc(50% - 1.5px);left:12%}
+    .joystick-knob{position:absolute;left:50%;top:50%;width:54px;height:54px;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.92);border-radius:50%;background:#2f8f63;box-shadow:0 4px 0 rgba(7,20,13,.55);will-change:transform}
+    .action-pad{position:absolute;right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(2,minmax(58px,64px));gap:8px;pointer-events:auto}
+    .action-pad button{min-width:58px;height:58px;padding:4px;border:2px solid rgba(255,255,255,.88);border-radius:50%;color:#fff;font-weight:900;font-size:.72rem;line-height:1;background:#173d2b;box-shadow:0 4px 0 rgba(7,20,13,.58);touch-action:none;user-select:none}
+    .action-pad button small{display:block;margin-top:3px;font-size:.49rem;line-height:1;text-transform:uppercase}.action-pad button:active,.action-pad button.active{transform:translateY(3px);box-shadow:0 1px 0 rgba(7,20,13,.58);filter:brightness(1.13)}
+    .action-pad .touch-action{background:#9a7000;color:#fffbe0}.action-pad .touch-swing{background:#b84c23}.action-pad .touch-bat{background:#256f9f}.action-pad .touch-trap{background:#a82f2b}
+    .touch-hint,.mobile-help{display:none}
     .legend{display:flex;gap:14px;flex-wrap:wrap}.legend span{display:flex;gap:6px;align-items:center}.dot{width:10px;height:10px;border-radius:3px;background:var(--green)}.dot.g{background:var(--red)}.dot.e{background:linear-gradient(135deg,#fff,#aeefff,#e3baff);border:1px solid #6fa5c7;box-shadow:0 0 5px #9eefff}
-    @media(max-width:700px){body{padding:8px}.wrap{gap:9px}.hud{min-height:51px;padding:7px 10px;border-radius:12px}.score strong{font-size:1.45rem}.game-shell{border-radius:12px}.egg-timer{top:7px;left:7px;gap:5px}.egg-timer-btn{width:43px;height:43px;border-width:2px}.timer-egg{width:21px;height:27px}.egg-timer-panel{min-width:145px;padding:7px 9px}.egg-timer-panel strong{font-size:1.05rem}.egg-timer-panel span{font-size:.64rem}.tipline{display:none}.controls{grid-template-columns:1fr;padding:9px 10px}.mission{display:block;text-align:center}.touch{display:grid;justify-content:center}.overlay{padding:10px}.card{padding:10px 14px;border-radius:13px}.card p{display:none}.card .eggmark{width:42px;height:49px;margin-bottom:5px}.card .eggmark:before{inset:-17px}.card .eggmark:after{font-size:.95rem;right:-9px}.card h1{font-size:1.72rem;line-height:.9;margin-bottom:9px}.primary{padding:8px 20px;min-width:145px}}
-    @media(max-width:520px){.hud{grid-template-columns:1fr 1fr;row-gap:5px}.rival-score{justify-content:flex-start}.score strong{font-size:1.3rem}.hud small{font-size:.6rem}.touch{grid-template-columns:38px 38px 38px 72px 56px;grid-template-rows:38px 38px}.touch button{font-size:.82rem}.controls{padding:7px}}
+    @media(max-width:700px){body{padding:8px}.wrap{gap:9px}.hud{min-height:51px;padding:7px 10px;border-radius:12px}.score strong{font-size:1.45rem}.game-shell{border-radius:12px}.egg-timer{top:7px;left:7px;gap:5px}.egg-timer-btn{width:43px;height:43px;border-width:2px}.timer-egg{width:21px;height:27px}.egg-timer-panel{min-width:145px;padding:7px 9px}.egg-timer-panel strong{font-size:1.05rem}.egg-timer-panel span{font-size:.64rem}.tipline{display:none}.controls{grid-template-columns:1fr;padding:9px 10px}.mission{display:block;text-align:center}.touch{display:none}.overlay{padding:10px}.card{padding:10px 14px;border-radius:13px}.card p{display:none}.card .eggmark{width:42px;height:49px;margin-bottom:5px}.card .eggmark:before{inset:-17px}.card .eggmark:after{font-size:.95rem;right:-9px}.card h1{font-size:1.72rem;line-height:.9;margin-bottom:9px}.primary{padding:8px 20px;min-width:145px}}
+    @media(max-width:520px){.hud{grid-template-columns:1fr 1fr;row-gap:5px}.rival-score{justify-content:flex-start}.score strong{font-size:1.3rem}.hud small{font-size:.6rem}.controls{padding:7px}}
+    @media(pointer:coarse){
+      .game-shell.playing .mobile-controls{display:block}
+      .desktop-hint{display:none}.touch-hint{display:inline}
+      .mobile-help{display:block;margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.25}
+    }
+    @media(pointer:coarse) and (orientation:landscape){
+      .joystick-zone{width:min(27vh,145px);height:min(27vh,145px)}
+      .action-pad{right:max(72px,calc(env(safe-area-inset-right) + 68px));grid-template-columns:repeat(2,minmax(56px,60px));gap:6px}
+      .action-pad button{min-width:56px;height:56px}
+    }
     @media(orientation:landscape){
       body{
         padding-top:max(clamp(10px,2.4vw,24px),env(safe-area-inset-top));
@@ -97,6 +117,18 @@
         </div>
       </div>
       <canvas id="game" width="1400" height="800" role="img" aria-label="A blocky forest arena with your green pen on the left, a red rival pen on the right, five colorful patterned eggs, bear traps, a bat, one computer rival, one guard, and hatched monsters roaming inside both pens"></canvas>
+      <div class="mobile-controls" aria-label="Touch game controls">
+        <div class="joystick-zone" id="joystickZone" role="application" aria-label="Movement joystick. Drag to move.">
+          <span class="joystick-ring" aria-hidden="true"></span>
+          <span class="joystick-knob" id="joystickKnob" aria-hidden="true"></span>
+        </div>
+        <div class="action-pad">
+          <button class="touch-action" id="touchActionBtn" type="button" aria-label="Action: grab, drop, hatch, or steal"><span>ACTION</span><small>interact</small></button>
+          <button class="touch-swing" id="touchSwingBtn" type="button" aria-label="Swing bat"><span>SWING</span><small>bat</small></button>
+          <button class="touch-bat" id="touchBatBtn" type="button" aria-label="Hide or show bat"><span>BAT</span><small>hide/show</small></button>
+          <button class="touch-trap" id="touchTrapBtn" type="button" aria-label="Place bear trap"><span>TRAP</span><small>place</small></button>
+        </div>
+      </div>
       <div class="overlay" id="overlay">
         <div class="card">
           <span class="eggmark" aria-hidden="true"></span>
@@ -109,11 +141,11 @@
 
     <div class="tipline" aria-hidden="true">
       <div class="legend"><span><i class="dot"></i>Your safe pen</span><span><i class="dot g"></i>Rival pen</span><span><i class="dot e"></i>Radiant eggs</span><span><i class="dot" style="background:var(--blue)"></i>Computer rival</span></div>
-      <strong>Move: WASD / arrows · Action: space · Swing: B · Hide/show bat: V · Trap: T</strong>
+      <strong><span class="desktop-hint">Move: WASD / arrows · Action: space · Swing: B · Hide/show bat: V · Trap: T</span><span class="touch-hint">Drag the left joystick to move · Use the right thumb buttons to interact, swing, hide/show the bat, and place traps</span></strong>
     </div>
 
     <section class="controls" aria-label="Touch controls">
-      <div class="mission"><strong id="mission">Beat your rival to an egg</strong><span id="levelText">Level 1 of 10 · 5 eggs outside · 3 bear traps ready</span></div>
+      <div class="mission"><strong id="mission">Beat your rival to an egg</strong><span id="levelText">Level 1 of 10 · 5 eggs outside · 3 bear traps ready</span><span class="mobile-help">Left joystick: move · Right buttons: action, swing, bat on/off, trap</span></div>
       <div class="touch">
         <button class="up" data-key="ArrowUp" aria-label="Move up">▲</button>
         <button class="left" data-key="ArrowLeft" aria-label="Move left">◀</button>
@@ -143,6 +175,12 @@
   const actionBtn = document.getElementById('actionBtn');
   const batBtn = document.getElementById('batBtn');
   const trapBtn = document.getElementById('trapBtn');
+  const joystickZone = document.getElementById('joystickZone');
+  const joystickKnob = document.getElementById('joystickKnob');
+  const touchActionBtn = document.getElementById('touchActionBtn');
+  const touchSwingBtn = document.getElementById('touchSwingBtn');
+  const touchBatBtn = document.getElementById('touchBatBtn');
+  const touchTrapBtn = document.getElementById('touchTrapBtn');
   const eggTimerBtn = document.getElementById('eggTimerBtn');
   const eggTimerPanel = document.getElementById('eggTimerPanel');
   const eggTimerValue = document.getElementById('eggTimerValue');
@@ -156,6 +194,7 @@
   let traps=[],trapsLeft=3,batCooldown=0,batFlash=0,batVisible=true;
   let audio=null;
   const keys={};
+  const touchMove={x:0,y:0,pointerId:null};
   const player={x:150,y:400,r:19,speed:270};
   const teammate={x:1255,y:500,r:18,speed:238,carrying:null,invincible:0,target:null,detour:0,stunned:0};
   const eggPalettes=[
@@ -230,6 +269,9 @@
     else missionEl.textContent='Beat your rival to a '+eggPalettes[level-1].name+' egg';
     actionBtn.textContent=nearRivalMonster?'STEAL':ready&&insidePen(player)?'HATCH':(carrying!==null||carryingMonster)?'DROP':'GRAB';
     batBtn.textContent=!batVisible?'BAT OFF':batCooldown>0?'BAT '+batCooldown.toFixed(1):'BAT';trapBtn.textContent='TRAP '+trapsLeft;
+    touchActionBtn.querySelector('small').textContent=nearRivalMonster?'steal':ready&&insidePen(player)?'hatch':(carrying!==null||carryingMonster)?'drop':'interact';
+    touchBatBtn.querySelector('small').textContent=batVisible?'hide':'show';touchBatBtn.setAttribute('aria-pressed',String(!batVisible));
+    touchTrapBtn.querySelector('small').textContent=trapsLeft+' left';
     levelEl.textContent='Level '+level+' of 10 · '+(5-score-rivalScore)+' eggs outside · '+guardName()+' guard · '+trapsLeft+' traps · speed boosts '+speedBoosts;
   }
   function beep(freq=440,dur=.08,type='square',vol=.045){
@@ -242,17 +284,17 @@
     if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)();
     if(audio.state==='suspended') audio.resume();
     if(pendingNext){level++;pendingNext=false;resetRound()}else resetRun();
-    running=true;overlay.classList.add('hidden');last=performance.now();requestAnimationFrame(loop);
+    running=true;document.getElementById('gameShell').classList.add('playing');overlay.classList.add('hidden');last=performance.now();requestAnimationFrame(loop);
   }
   function end(completed=false){
-    running=false;pendingNext=false;
+    running=false;pendingNext=false;document.getElementById('gameShell').classList.remove('playing');
     titleEl.textContent=completed?'All ten rival raids won!':score?`Raid over: ${hatched} of 5 monsters secured`:'Your rival ruled the field';
     textEl.textContent=completed?'You beat every rival race, from chickens to angels, and brought the whole monster crew home.':score>=1?'Nice haul. Use your bat and bear traps to stop the rival, then raid his red pen.':'Place traps on the rival’s route, use stone walls for cover, and rush the nearest egg.';
     startBtn.textContent='Raid again';overlay.classList.remove('hidden');beep(completed?1040:160,.28,completed?'triangle':'sawtooth',.05);
   }
   function completeLevel(){
     if(level>=10){end(true);return}
-    running=false;pendingNext=true;
+    running=false;pendingNext=true;document.getElementById('gameShell').classList.remove('playing');
     titleEl.textContent='Level '+level+' complete!';
     textEl.textContent='All five eggs hatched. Your '+eggPalettes[level-1].name+' friends will stay in the pen. Next up: '+guardNames[level]+'.';
     startBtn.textContent='Start level '+(level+1);overlay.classList.remove('hidden');beep(1040,.26,'triangle',.05);
@@ -424,8 +466,9 @@
     });
   }
   function update(dt){
-    let dx=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0);
-    let dy=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0);
+    let dx=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0)+touchMove.x;
+    let dy=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0)+touchMove.y;
+    dx=Math.max(-1,Math.min(1,dx));dy=Math.max(-1,Math.min(1,dy));
     const onTreadmill=circleRect(player.x,player.y,player.r,treadmill);
     if(onTreadmill&&treadmillReady){
       trainingProgress=Math.min(1,trainingProgress+dt/.45);
@@ -691,6 +734,45 @@
   function loop(t){if(!running)return;const dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();if(running)requestAnimationFrame(loop)}
   addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyB','KeyT','KeyV'].includes(e.code))e.preventDefault();keys[e.code]=true;if(!e.repeat){if(e.code==='Space')grab();else if(e.code==='KeyB')swingBat();else if(e.code==='KeyT')placeTrap();else if(e.code==='KeyV')toggleBat()}},{passive:false});
   addEventListener('keyup',e=>keys[e.code]=false);
+
+  function updateJoystick(e){
+    const rect=joystickZone.getBoundingClientRect();
+    const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+    let x=e.clientX-cx,y=e.clientY-cy;
+    const limit=rect.width*.28,distance=Math.hypot(x,y);
+    if(distance>limit){x=x/distance*limit;y=y/distance*limit;}
+    const strength=Math.min(1,distance/limit);
+    touchMove.x=strength<.14?0:(x/limit);
+    touchMove.y=strength<.14?0:(y/limit);
+    joystickKnob.style.transform='translate(-50%,-50%) translate('+x+'px,'+y+'px)';
+  }
+  function releaseJoystick(e){
+    if(touchMove.pointerId!==null&&e.pointerId!==touchMove.pointerId)return;
+    touchMove.pointerId=null;touchMove.x=0;touchMove.y=0;
+    joystickKnob.style.transform='translate(-50%,-50%)';
+  }
+  joystickZone.addEventListener('pointerdown',e=>{
+    e.preventDefault();touchMove.pointerId=e.pointerId;joystickZone.setPointerCapture(e.pointerId);updateJoystick(e);
+  });
+  joystickZone.addEventListener('pointermove',e=>{if(e.pointerId===touchMove.pointerId){e.preventDefault();updateJoystick(e)}});
+  joystickZone.addEventListener('pointerup',releaseJoystick);
+  joystickZone.addEventListener('pointercancel',releaseJoystick);
+  joystickZone.addEventListener('lostpointercapture',releaseJoystick);
+
+  function bindTouchAction(btn,action){
+    const release=()=>btn.classList.remove('active');
+    btn.addEventListener('pointerdown',e=>{
+      e.preventDefault();btn.classList.add('active');btn.setPointerCapture(e.pointerId);action();
+    });
+    btn.addEventListener('pointerup',release);
+    btn.addEventListener('pointercancel',release);
+    btn.addEventListener('lostpointercapture',release);
+  }
+  bindTouchAction(touchActionBtn,grab);
+  bindTouchAction(touchSwingBtn,swingBat);
+  bindTouchAction(touchBatBtn,toggleBat);
+  bindTouchAction(touchTrapBtn,placeTrap);
+
   document.querySelectorAll('.touch button').forEach(btn=>{
     const code=btn.dataset.key;
     const on=e=>{e.preventDefault();btn.classList.add('active');if(code==='Space')grab();else if(code==='KeyB')swingBat();else if(code==='KeyT')placeTrap();else keys[code]=true};
