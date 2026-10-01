@@ -1,5 +1,5 @@
 /* Starfall Squadron Nova offline service worker */
-const CACHE = 'starfall-squadron-nova-v2';
+const CACHE = 'starfall-squadron-nova-9e6ad53a5008';
 const SHELL = [
   './',
   './index.html',
