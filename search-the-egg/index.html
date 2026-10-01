@@ -60,6 +60,19 @@
     .legend{display:flex;gap:14px;flex-wrap:wrap}.legend span{display:flex;gap:6px;align-items:center}.dot{width:10px;height:10px;border-radius:3px;background:var(--green)}.dot.g{background:var(--red)}.dot.e{background:linear-gradient(135deg,#fff,#aeefff,#e3baff);border:1px solid #6fa5c7;box-shadow:0 0 5px #9eefff}
     @media(max-width:700px){body{padding:8px}.wrap{gap:9px}.hud{min-height:51px;padding:7px 10px;border-radius:12px}.score strong{font-size:1.45rem}.game-shell{border-radius:12px}.egg-timer{top:7px;left:7px;gap:5px}.egg-timer-btn{width:43px;height:43px;border-width:2px}.timer-egg{width:21px;height:27px}.egg-timer-panel{min-width:145px;padding:7px 9px}.egg-timer-panel strong{font-size:1.05rem}.egg-timer-panel span{font-size:.64rem}.tipline{display:none}.controls{grid-template-columns:1fr;padding:9px 10px}.mission{display:block;text-align:center}.touch{display:grid;justify-content:center}.overlay{padding:10px}.card{padding:10px 14px;border-radius:13px}.card p{display:none}.card .eggmark{width:42px;height:49px;margin-bottom:5px}.card .eggmark:before{inset:-17px}.card .eggmark:after{font-size:.95rem;right:-9px}.card h1{font-size:1.72rem;line-height:.9;margin-bottom:9px}.primary{padding:8px 20px;min-width:145px}}
     @media(max-width:520px){.hud{grid-template-columns:1fr 1fr;row-gap:5px}.rival-score{justify-content:flex-start}.score strong{font-size:1.3rem}.hud small{font-size:.6rem}.touch{grid-template-columns:38px 38px 38px 72px 56px;grid-template-rows:38px 38px}.touch button{font-size:.82rem}.controls{padding:7px}}
+    @media(orientation:landscape){
+      body{
+        padding-top:max(clamp(10px,2.4vw,24px),env(safe-area-inset-top));
+        padding-right:max(clamp(10px,2.4vw,24px),env(safe-area-inset-right));
+        padding-bottom:max(18px,env(safe-area-inset-bottom));
+        padding-left:max(clamp(10px,2.4vw,24px),env(safe-area-inset-left));
+      }
+      .hud{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:0;min-height:44px;padding:4px 10px}
+      .score{min-width:0;gap:4px}.score strong{font-size:1.2rem}.hud small{font-size:.58rem}.rival-score{justify-content:flex-end}
+      .game-shell{width:min(100%,calc((100dvh - 110px) * 1.75));margin-left:auto;margin-right:auto}
+      .egg-timer{top:auto;left:auto;bottom:max(10px,env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));align-items:flex-end}
+      .egg-timer-btn{width:44px;height:44px}
+    }
     @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.overlay{transition:none}}
   </style>
 </head>
