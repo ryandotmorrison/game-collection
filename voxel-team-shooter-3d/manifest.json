@@ -1,0 +1,25 @@
+{
+  "name": "Voxel Team Shooter 3D",
+  "short_name": "Voxel 3D",
+  "description": "Voxel Team Shooter 3D: first-person voxel team shooter. Lead the red squad against the blue squad — first to 25 eliminations wins.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0f1a12",
+  "theme_color": "#0f1a12",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
