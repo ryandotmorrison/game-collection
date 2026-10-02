@@ -1,5 +1,5 @@
 /* Voxel Team Shooter 3D offline service worker */
-const CACHE = 'voxel-team-shooter-3d-e9ab1815539b';
+const CACHE = 'voxel-team-shooter-3d-1d2e7263b4ef';
 const SHELL = [
   './',
   './index.html',
