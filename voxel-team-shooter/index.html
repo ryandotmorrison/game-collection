@@ -105,7 +105,7 @@ button{font:inherit;color:inherit}
 'use strict';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:false});
 const $=id=>document.getElementById(id);
-const TAU=Math.PI*2, TILE=48, WORLD_W=40*TILE, WORLD_H=28*TILE;
+const TAU=Math.PI*2, TILE=48, WORLD_W=40*TILE, WORLD_H=28*TILE, ENEMY_SPEED_MULTIPLIER=.85;
 const coarsePointer=matchMedia('(pointer:coarse)');
 let DPR=1,W=innerWidth,H=innerHeight,gameState='menu',paused=false,difficulty=1,last=0,elapsed=0,timeLeft=300,shake=0,flash=0,rafId=null;
 let actors=[],walls=[],projectiles=[],tracers=[],particles=[],pickups=[],scores={red:0,blue:0},keys={},mouse={x:W/2,y:H/2,down:false,worldX:0,worldY:0};
@@ -160,7 +160,7 @@ function updatePlayer(dt){if(!player.alive){touchLockedTarget=null;player.respaw
 function nearestLivingEnemy(){let best=null,bd=Infinity;for(const e of actors){if(!e.alive||e.team===player.team)continue;const d=dist(player,e);if(d<bd){best=e;bd=d}}return best}
 function updateBot(a,dt){if(!a.alive){a.respawn-=dt;if(a.respawn<=0)spawnFor(a);return}a.think-=dt;if(a.think<=0||!a.target||!a.target.alive){let enemies=actors.filter(e=>e.team!==a.team&&e.alive);a.target=enemies.sort((x,y)=>dist(a,x)-dist(a,y))[0];a.think=rnd(.18,.38);if(Math.random()<.18)a.strafe*=-1}
  if(!a.target)return;const t=a.target,d=dist(a,t),an=Math.atan2(t.y-a.y,t.x-a.x);a.angle=an;let ideal=a.weapon===1?230:420,dx=0,dy=0;if(d>ideal){dx=Math.cos(an);dy=Math.sin(an)}else if(d<ideal*.52){dx=-Math.cos(an);dy=-Math.sin(an)}dx+=Math.cos(an+Math.PI/2)*a.strafe*.48;dy+=Math.sin(an+Math.PI/2)*a.strafe*.48;
- if(lineBlocked(a.x,a.y,t.x,t.y,true)){dx=Math.cos(an+a.strafe*.8);dy=Math.sin(an+a.strafe*.8)}moveActor(a,dx,dy,145+35*difficulty,dt);if(d<weapons[a.weapon].range&&!lineBlocked(a.x,a.y,t.x,t.y,true)&&Math.random()<.94*difficulty){let error=(1/difficulty)*.07+rnd(-.04,.04);fireWeapon(a,an+rnd(-error,error))}if(a.ammo[a.weapon]===0)a.weapon=0}
+ if(lineBlocked(a.x,a.y,t.x,t.y,true)){dx=Math.cos(an+a.strafe*.8);dy=Math.sin(an+a.strafe*.8)}moveActor(a,dx,dy,(145+35*difficulty)*(a.team!==player.team?ENEMY_SPEED_MULTIPLIER:1),dt);if(d<weapons[a.weapon].range&&!lineBlocked(a.x,a.y,t.x,t.y,true)&&Math.random()<.94*difficulty){let error=(1/difficulty)*.07+rnd(-.04,.04);fireWeapon(a,an+rnd(-error,error))}if(a.ammo[a.weapon]===0)a.weapon=0}
 function update(dt){if(paused||gameState!=='playing')return;elapsed+=dt;timeLeft-=dt;if(timeLeft<=0)endGame(scores.red===scores.blue?'draw':scores.red>scores.blue?'red':'blue');for(const a of actors)a.cool=Math.max(0,a.cool-dt);updatePlayer(dt);for(const a of actors)if(!a.isPlayer)updateBot(a,dt);
  for(let i=projectiles.length-1;i>=0;i--){const p=projectiles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;let hit=wallAt(p.x,p.y)||p.life<=0||p.x<0||p.y<0||p.x>WORLD_W||p.y>WORLD_H;for(const a of actors)if(a.alive&&a.team!==p.team&&dist(a,p)<a.r+7)hit=true;if(hit){explode(p);projectiles.splice(i,1)}}
  for(let i=tracers.length-1;i>=0;i--){tracers[i].life-=dt;if(tracers[i].life<=0)tracers.splice(i,1)}for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.92;p.vy*=.92;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
