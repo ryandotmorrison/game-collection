@@ -1,5 +1,5 @@
 /* Enders Game offline service worker */
-const CACHE = 'enders-game-253b4e7d2dd8';
+const CACHE = 'enders-game-b601018a4da6';
 const SHELL = [
   './',
   './index.html',
