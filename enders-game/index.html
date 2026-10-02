@@ -75,6 +75,13 @@
     @media(max-width:850px){body{padding:8px}.shell{display:block}.side{margin-top:10px}.level-list{grid-template-columns:repeat(3,1fr)}.level-btn{grid-template-columns:25px 1fr;padding:7px 4px}.stars{display:none}.lvl-name{font-size:15px}.lvl-sub{display:none}.arena{min-height:440px;max-height:none}.mobile-controls{display:block}.keyrow{display:none}.intel{margin-top:12px}.topbar{height:48px}.rank{font-size:18px}.mission{display:none}.stats{font-size:16px;gap:10px}.command-deck{top:8px;left:8px}.command-label{display:none}.command-btn{min-width:68px;padding:8px;font-size:15px}}
     @media(max-width:520px){body{padding:0}.game-wrap,.side{border-left:0;border-right:0}.topbar{padding:0 9px}.rank{font-size:17px}.stats{font-size:15px;gap:8px}.arena{aspect-ratio:auto;height:min(72vh,620px);min-height:460px}.brief{padding:20px}.brief h1{font-size:42px}.orders{grid-template-columns:1fr}.order:nth-child(4){display:none}.desktop-copy{display:none}.touch-copy{display:inline}.side{margin-top:0;padding:13px}.side h2{font-size:20px}.level-list{grid-template-columns:repeat(2,1fr)}.command-btn{min-width:62px;padding:7px 6px;font-size:14px}.toast{width:max-content;max-width:calc(100% - 32px);white-space:normal;text-align:center;font-size:20px}}
     @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    #rotatePrompt{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(3,11,18,.96);padding:24px;text-align:center}
+    #rotatePrompt[hidden]{display:none}
+    .rp-card{max-width:340px}
+    .rp-icon{display:block;margin:0 auto 16px}
+    .rp-kicker{font-family:'Barlow Condensed',sans-serif;color:#56d9df;font-weight:800;letter-spacing:.22em;text-transform:uppercase;font-size:13px}
+    .rp-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:44px;line-height:1;color:#fff;text-transform:uppercase;letter-spacing:.02em;margin:10px 0 8px}
+    .rp-sub{font-family:'IBM Plex Sans',sans-serif;color:#9babb5;font-size:15px;line-height:1.5;margin:0}
   </style>
 </head>
 <body>
@@ -123,8 +130,23 @@
       <div class="keyrow" aria-label="Keyboard controls"><span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span><span class="key">SPACE</span><span class="key">1 ATK</span><span class="key">2 DEF</span><span class="key">E MD</span><span class="key">P</span></div>
     </aside>
   </main>
+<div id="rotatePrompt" hidden role="alertdialog" aria-label="Rotate your device">
+  <div class="rp-card">
+    <svg class="rp-icon" viewBox="0 0 80 80" width="76" height="76" aria-hidden="true"><g fill="none" stroke="#56d9df" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><rect x="26" y="12" width="28" height="52" rx="5"/><path d="M37 58h6"/><path d="M14 32c0-10 6-18 14-21"/><path d="M14 32l-6-1M14 32l1-6"/><path d="M66 48c0 10-6 18-14 21"/><path d="M66 48l6 1M66 48l-1 6"/></g></svg>
+    <div class="rp-kicker">Battle School</div>
+    <div class="rp-title">Rotate your device</div>
+    <p class="rp-sub">This battle needs a wider view. Turn your phone sideways to play.</p>
+  </div>
+</div>
 <script>
 (() => {
+  const rotatePrompt=document.getElementById('rotatePrompt');
+  const coarsePointer=window.matchMedia('(pointer:coarse)').matches;
+  function checkOrientation(){rotatePrompt.hidden=!(coarsePointer&&window.innerWidth<window.innerHeight);}
+  checkOrientation();
+  window.addEventListener('resize',checkOrientation);
+  window.addEventListener('orientationchange',checkOrientation);
+
   const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
   const arena=document.getElementById('arena'),overlay=document.getElementById('overlay');
   const title=document.getElementById('overlayTitle'),text=document.getElementById('overlayText'),kicker=document.getElementById('overlayKicker'),startBtn=document.getElementById('startBtn');
