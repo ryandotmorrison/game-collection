@@ -307,7 +307,7 @@
   });
   window.addEventListener('keyup',e=>keys[e.code]=false);
   function mousePos(e){const r=canvas.getBoundingClientRect();pointer.x=e.clientX-r.left;pointer.y=e.clientY-r.top}
-  canvas.addEventListener('pointermove',mousePos);canvas.addEventListener('pointerdown',e=>{mousePos(e);pointer.down=true;if(state==='playing')shoot(player)});window.addEventListener('pointerup',()=>pointer.down=false);
+  canvas.addEventListener('pointermove',mousePos);canvas.addEventListener('pointerdown',e=>{mousePos(e);pointer.down=true;if(state==='playing'){if(coarsePointer){const target=nearestEnemy(player);if(target)player.angle=Math.atan2(target.y-player.y,target.x-player.x)}shoot(player)}});window.addEventListener('pointerup',()=>pointer.down=false);
   const stick=document.getElementById('stick'),nub=document.getElementById('nub');let stickPointer=null;
   function stickMove(e){e.preventDefault();const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const m=Math.hypot(dx,dy),max=38;if(m>max){dx*=max/m;dy*=max/m}touchMove.x=dx/max;touchMove.y=dy/max;nub.style.transform=`translate(${dx}px,${dy}px)`}
   function releaseStick(e){if(stickPointer!==null&&e.pointerId!==stickPointer)return;stickPointer=null;touchMove.x=touchMove.y=0;nub.style.transform=''}
