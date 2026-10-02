@@ -196,6 +196,7 @@
     {name:'Armada Breaker',sub:'Little Doctor',type:'fleet',allies:12,enemies:22,speed:1.18,cover:10,commandSchool:true,doctor:true,enemyHp:3,aggression:1.20,aim:.80},
     {name:'Homeworld',sub:'2 waves · escort',type:'homeworld',allies:15,enemies:18,wave2:28,speed:1.27,cover:8,commandSchool:true,doctor:true,enemyHp:3,aggression:1.30,aim:.88}
   ];
+  const ZOOM=0.85;
   let W=960,H=600,worldW=1480,worldH=820,dpr=1,state='intro',level=0,unlocked=levels.length,score=0,lives=3,last=0,shake=0,gateHold=0,command='attack';
   let player,doctor=null,actors=[],shots=[],particles=[],blocks=[],stars=[],camera={x:0,y:0},completed=new Set();
   let elapsed=0,ambushTriggered=false,ambushReady=false,wave=1,wavePending=false,planetHit=0,mdCharge=1,mdCooldown=0;
@@ -365,7 +366,7 @@
     if(L().type==='ice'&&!ambushReady&&elapsed>6){ambushReady=true;missionEl.textContent='AMBUSH READY — ORDER THE ICE FLEET TO FIRE';showToast('Bugger ships over the ice — ambush ready')}
     const accel=isCommand()?260:235,max=isCommand()?190:165,drag=.997;
     let mx=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+touchMove.x,my=(keys.KeyS||keys.ArrowDown?1:0)-(keys.KeyW||keys.ArrowUp?1:0)+touchMove.y;const mm=Math.hypot(mx,my)||1;mx/=mm;my/=mm;
-    if(player.alive){player.vx+=mx*accel*dt;player.vy+=my*accel*dt;const vm=Math.hypot(player.vx,player.vy);if(vm>max){player.vx*=max/vm;player.vy*=max/vm}player.vx*=Math.pow(drag,dt*60);player.vy*=Math.pow(drag,dt*60);if(!matchMedia('(pointer:coarse)').matches)player.angle=Math.atan2(pointer.y+camera.y-player.y,pointer.x+camera.x-player.x);if(pointer.down)shoot(player)}
+    if(player.alive){player.vx+=mx*accel*dt;player.vy+=my*accel*dt;const vm=Math.hypot(player.vx,player.vy);if(vm>max){player.vx*=max/vm;player.vy*=max/vm}player.vx*=Math.pow(drag,dt*60);player.vy*=Math.pow(drag,dt*60);if(!matchMedia('(pointer:coarse)').matches)player.angle=Math.atan2(pointer.y/ZOOM+camera.y-player.y,pointer.x/ZOOM+camera.x-player.x);if(pointer.down)shoot(player)}
     actors.forEach((a,idx)=>{
       a.cool=Math.max(0,a.cool-dt);a.freeze=Math.max(0,a.freeze-dt);if(!a.alive)return;
       if(a.kind==='doctor'){
@@ -390,10 +391,10 @@
     });
     shots.forEach(s=>{
       s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(hitBlock(s.x,s.y,2))s.life=0;if(s.x<0||s.x>worldW||s.y<0||s.y>worldH)s.life=0;
-      actors.forEach(a=>{if(!a.alive||a.buried||s.life<=0)return;const opposing=(s.team==='enemy'&&!isHostile(a))||(s.team==='friend'&&isHostile(a));if(opposing&&dist(s,a)<a.r+4){s.life=0;a.hp--;burst(a.x,a.y,a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7c4c':'#66eef0');if(a.hp<=0){a.alive=false;a.freeze=99;if(isHostile(a)){score+=100;scoreEl.textContent=String(score).padStart(4,'0')}else if(a.kind==='doctor'){showToast('Little Doctor destroyed');showOverlay('lost')}else if(a.team==='player'){lives--;livesEl.textContent=lives;if(lives<=0){showOverlay('lost')}else setTimeout(()=>{player.alive=true;player.hp=player.maxHp;player.x=worldW*.09;player.y=worldH*.5;player.vx=player.vy=0},700)}}}})
+      actors.forEach(a=>{if(!a.alive||a.buried||s.life<=0)return;const opposing=(s.team==='enemy'&&!isHostile(a))||(s.team==='friend'&&isHostile(a));if(opposing&&dist(s,a)<a.r+4){s.life=0;a.hp--;burst(a.x,a.y,a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7c4c':'#66eef0');if(a.hp<=0){a.alive=false;a.freeze=99;if(isHostile(a)){score+=100;scoreEl.textContent=String(score).padStart(4,'0')}else if(a.kind==='doctor'){showToast('Little Doctor destroyed');showOverlay('lost')}else if(a.team==='player'){lives--;livesEl.textContent=lives;if(lives<=0){showOverlay('lost')}else setTimeout(()=>{player.alive=true;player.hp=player.maxHp;player.x=worldW*.09;player.y=worldH*.5;player.vx=player.vy=0;player.freeze=0;player.cool=0},700)}}}})
     });
     shots=shots.filter(s=>s.life>0);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96});particles=particles.filter(p=>p.life>0);
-    const focus=L().type==='homeworld'&&wave===2&&doctor&&doctor.alive?{x:(player.x+doctor.x)/2,y:(player.y+doctor.y)/2}:player,camX=clamp(focus.x-W*.38,0,Math.max(0,worldW-W)),camY=clamp(focus.y-H*.5,0,Math.max(0,worldH-H));camera.x+=(camX-camera.x)*Math.min(1,dt*5);camera.y+=(camY-camera.y)*Math.min(1,dt*5);
+    const focus=L().type==='homeworld'&&wave===2&&doctor&&doctor.alive?{x:(player.x+doctor.x)/2,y:(player.y+doctor.y)/2}:player,camX=clamp(focus.x-(W/ZOOM)*.38,0,Math.max(0,worldW-W/ZOOM)),camY=clamp(focus.y-(H/ZOOM)*.5,0,Math.max(0,worldH-H/ZOOM));camera.x+=(camX-camera.x)*Math.min(1,dt*5);camera.y+=(camY-camera.y)*Math.min(1,dt*5);
     const hostiles=actors.filter(a=>a.alive&&isHostile(a));
     if(L().type==='battle'){
       const gateRunner=actors.find(a=>a.alive&&!isHostile(a)&&a.x>worldW-64&&a.y>worldH*.36&&a.y<worldH*.64);if(gateRunner){gateHold+=dt;if(gateHold>1)winMission()}else gateHold=Math.max(0,gateHold-dt*2)
@@ -407,7 +408,7 @@
 
   function burst(x,y,c){shake=5;for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,s=40+Math.random()*140;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.35+Math.random()*.35,c})}}
   function draw(){
-    ctx.save();if(shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}ctx.translate(-camera.x,-camera.y);
+    ctx.save();if(shake){ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.85}ctx.translate(-camera.x*ZOOM,-camera.y*ZOOM);ctx.scale(ZOOM,ZOOM);
     const g=ctx.createRadialGradient(worldW*.52,worldH*.45,10,worldW*.52,worldH*.45,Math.max(worldW,worldH)*.7);g.addColorStop(0,L().type==='ice'?'#123345':'#0b2634');g.addColorStop(1,'#020910');ctx.fillStyle=g;ctx.fillRect(0,0,worldW,worldH);
     stars.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle='#b9f8fa';ctx.fillRect(s.x,s.y,s.r,s.r)});ctx.globalAlpha=1;ctx.strokeStyle='rgba(72,170,180,.13)';ctx.lineWidth=1;for(let x=80;x<worldW;x+=120){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,worldH);ctx.stroke()}for(let y=60;y<worldH;y+=120){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(worldW,y);ctx.stroke()}
     if(L().type==='battle'){drawGate(18,worldH*.36,36,worldH*.28,'#39d2da',false);drawGate(worldW-54,worldH*.36,36,worldH*.28,'#f4b84b',true)}
@@ -433,7 +434,7 @@
     if(a.freeze>0){ctx.strokeStyle='#c3fbff';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,a.r+6,0,Math.PI*2);ctx.stroke()}ctx.restore()
   }
   function drawGate(x,y,w,h,c,open){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=4;ctx.shadowColor=c;ctx.shadowBlur=10;ctx.strokeRect(x,y,w,h);ctx.shadowBlur=0;ctx.fillStyle=open?'rgba(244,184,75,.08)':'rgba(214,78,43,.12)';ctx.fillRect(x+5,y+5,w-10,h-10);for(let i=1;i<4;i++){ctx.strokeStyle=c+'88';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y+h*i/4);ctx.lineTo(x+w,y+h*i/4);ctx.stroke()}ctx.restore()}
-  function drawRadar(){const rw=Math.min(154,W*.28),rh=82,rx=W-rw-16,ry=58,sx=rw/worldW,sy=rh/worldH;ctx.save();ctx.fillStyle='rgba(3,15,24,.82)';ctx.fillRect(rx,ry,rw,rh);ctx.strokeStyle='rgba(142,211,216,.58)';ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);if(L().type==='homeworld'){ctx.fillStyle='#b9794e';ctx.beginPath();ctx.arc(rx+(worldW-58)*sx,ry+worldH*.5*sy,5,0,Math.PI*2);ctx.fill()}else if(L().type==='battle'){ctx.fillStyle='rgba(255,193,90,.55)';ctx.fillRect(rx+rw-5,ry+rh*.36,3,rh*.28)}blocks.forEach(b=>{ctx.fillStyle=b.ice?'rgba(131,219,229,.7)':'rgba(113,151,159,.55)';ctx.fillRect(rx+b.x*sx-1,ry+b.y*sy-1,2,2)});actors.filter(a=>a.alive).forEach(a=>{ctx.fillStyle=a.kind==='doctor'?'#ffffff':a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7343':a.team==='player'?'#ffffff':'#56d9df';const r=a.team==='player'||a.kind==='doctor'?2.5:1.7;ctx.beginPath();ctx.arc(rx+a.x*sx,ry+a.y*sy,r,0,Math.PI*2);ctx.fill()});ctx.strokeStyle='rgba(255,255,255,.45)';ctx.strokeRect(rx+camera.x*sx,ry+camera.y*sy,W*sx,H*sy);ctx.restore()}
+  function drawRadar(){const rw=Math.min(154,W*.28),rh=82,rx=W-rw-16,ry=58,sx=rw/worldW,sy=rh/worldH;ctx.save();ctx.fillStyle='rgba(3,15,24,.82)';ctx.fillRect(rx,ry,rw,rh);ctx.strokeStyle='rgba(142,211,216,.58)';ctx.strokeRect(rx+.5,ry+.5,rw-1,rh-1);if(L().type==='homeworld'){ctx.fillStyle='#b9794e';ctx.beginPath();ctx.arc(rx+(worldW-58)*sx,ry+worldH*.5*sy,5,0,Math.PI*2);ctx.fill()}else if(L().type==='battle'){ctx.fillStyle='rgba(255,193,90,.55)';ctx.fillRect(rx+rw-5,ry+rh*.36,3,rh*.28)}blocks.forEach(b=>{ctx.fillStyle=b.ice?'rgba(131,219,229,.7)':'rgba(113,151,159,.55)';ctx.fillRect(rx+b.x*sx-1,ry+b.y*sy-1,2,2)});actors.filter(a=>a.alive).forEach(a=>{ctx.fillStyle=a.kind==='doctor'?'#ffffff':a.team==='enemy2'?'#ff4e87':isHostile(a)?'#ff7343':a.team==='player'?'#ffffff':'#56d9df';const r=a.team==='player'||a.kind==='doctor'?2.5:1.7;ctx.beginPath();ctx.arc(rx+a.x*sx,ry+a.y*sy,r,0,Math.PI*2);ctx.fill()});ctx.strokeStyle='rgba(255,255,255,.45)';ctx.strokeRect(rx+camera.x*sx,ry+camera.y*sy,(W/ZOOM)*sx,(H/ZOOM)*sy);ctx.restore()}
   function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}
   resize();requestAnimationFrame(loop);
 })();
