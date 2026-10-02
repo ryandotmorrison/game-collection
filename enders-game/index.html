@@ -41,7 +41,7 @@
     .arena{position:relative;width:100%;aspect-ratio:16/9;max-height:calc(100vh - 86px);min-height:520px;background:#04101a}
     canvas{width:100%;height:100%;display:block;touch-action:none}
     .scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(80,190,200,.025) 4px);mix-blend-mode:screen}
-    .overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(2,10,16,.78);z-index:5;padding:24px;transition:opacity .2s}
+    .overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(2,10,16,.78);z-index:20;padding:24px;transition:opacity .2s}
     .overlay.hidden{opacity:0;pointer-events:none}
     .brief{width:min(560px,100%);background:var(--panel);border-top:5px solid var(--orange);box-shadow:0 20px 70px rgba(0,0,0,.55);padding:26px}
     .kicker{font-family:'Barlow Condensed',sans-serif;color:var(--orange);font-weight:800;letter-spacing:.16em;text-transform:uppercase;font-size:13px}
@@ -62,18 +62,50 @@
     .level-btn>span:nth-child(2){min-width:0}.lvl-name{display:block;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;text-transform:uppercase;line-height:1.05;overflow-wrap:anywhere}.lvl-sub{display:block;font-size:11px;color:var(--muted);margin-top:3px}.stars{font-size:12px;letter-spacing:-1px;color:var(--amber)}
     .intel{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.45}.intel strong{color:var(--ink)}
     .keyrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.key{font-family:'Barlow Condensed',sans-serif;font-weight:700;background:var(--panel2);border:1px solid var(--line);min-width:27px;text-align:center;padding:3px 6px;color:var(--ink)}
-    .mobile-controls{display:none;position:absolute;inset:0;pointer-events:none;z-index:3}
-    .stick{position:absolute;bottom:18px;left:18px;width:112px;height:112px;border-radius:50%;border:2px solid rgba(91,221,229,.48);background:rgba(3,15,24,.52);pointer-events:auto;touch-action:none}.nub{position:absolute;width:46px;height:46px;border-radius:50%;left:31px;top:31px;background:rgba(91,221,229,.72);border:2px solid #baf9fb}
-    .fire{position:absolute;right:19px;bottom:24px;width:86px;height:86px;border-radius:50%;border:3px solid #ffc15a;background:rgba(201,79,24,.78);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;pointer-events:auto;touch-action:none}
+    .mobile-controls{display:none;position:absolute;inset:0;pointer-events:none;z-index:10}
+    .stick{position:absolute;bottom:18px;left:18px;width:128px;height:128px;border-radius:50%;border:2px solid rgba(91,221,229,.48);background:rgba(3,15,24,.52);pointer-events:auto;touch-action:none}.nub{position:absolute;width:52px;height:52px;border-radius:50%;left:36px;top:36px;background:rgba(91,221,229,.72);border:2px solid #baf9fb}
+    .fire{position:absolute;right:19px;bottom:24px;width:92px;height:92px;border-radius:50%;border:3px solid #ffc15a;background:rgba(201,79,24,.78);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;pointer-events:auto;touch-action:none}
     .pause{position:absolute;right:12px;top:12px;width:38px;height:38px;border:1px solid rgba(165,216,222,.5);background:rgba(4,16,26,.7);color:white;font-size:17px;z-index:4;cursor:pointer}
+    .missions-toggle{display:none;position:absolute;right:62px;top:12px;min-height:44px;border:1px solid rgba(165,216,222,.5);background:rgba(4,16,26,.82);color:white;padding:0 12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;z-index:60;cursor:pointer}
     .command-deck{position:absolute;left:12px;top:12px;z-index:4;display:flex;align-items:stretch;background:rgba(3,15,24,.88);border:1px solid rgba(127,191,199,.42);box-shadow:0 8px 20px rgba(0,0,0,.26)}
     .command-label{display:flex;align-items:center;padding:0 10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:.12em;color:#9ec2c7;text-transform:uppercase;border-right:1px solid rgba(127,191,199,.34)}
     .command-btn{border:0;border-right:1px solid rgba(127,191,199,.24);background:transparent;color:#d8eef0;min-width:76px;padding:9px 10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;cursor:pointer}
     .command-btn:last-child{border-right:0}.command-btn:hover{background:rgba(75,180,190,.18)}.command-btn.active{background:var(--cyan);color:white}.command-btn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
     .toast{position:absolute;left:50%;top:15%;transform:translateX(-50%);background:rgba(3,15,24,.9);border-top:3px solid var(--amber);color:white;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:clamp(20px,3vw,34px);text-transform:uppercase;letter-spacing:.04em;padding:10px 18px;z-index:4;opacity:0;pointer-events:none;white-space:nowrap}.toast.show{animation:toast 1.5s ease}
     @keyframes toast{0%{opacity:0;transform:translate(-50%,-8px)}15%,75%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
-    @media(max-width:850px){body{padding:8px}.shell{display:block}.side{margin-top:10px}.level-list{grid-template-columns:repeat(3,1fr)}.level-btn{grid-template-columns:25px 1fr;padding:7px 4px}.stars{display:none}.lvl-name{font-size:15px}.lvl-sub{display:none}.arena{min-height:440px;max-height:none}.mobile-controls{display:block}.keyrow{display:none}.intel{margin-top:12px}.topbar{height:48px}.rank{font-size:18px}.mission{display:none}.stats{font-size:16px;gap:10px}.command-deck{top:8px;left:8px}.command-label{display:none}.command-btn{min-width:68px;padding:8px;font-size:15px}}
+    @media(max-width:850px){body{padding:8px}.shell{display:block}.side{margin-top:10px}.level-list{grid-template-columns:repeat(3,1fr)}.level-btn{grid-template-columns:25px 1fr;padding:7px 4px}.stars{display:none}.lvl-name{font-size:15px}.lvl-sub{display:none}.arena{min-height:440px;max-height:none}.keyrow{display:none}.intel{margin-top:12px}.topbar{height:48px}.rank{font-size:18px}.mission{display:none}.stats{font-size:16px;gap:10px}.command-deck{top:8px;left:8px}.command-label{display:none}.command-btn{min-width:68px;padding:8px;font-size:15px}}
     @media(max-width:520px){body{padding:0}.game-wrap,.side{border-left:0;border-right:0}.topbar{padding:0 9px}.rank{font-size:17px}.stats{font-size:15px;gap:8px}.arena{aspect-ratio:auto;height:min(72vh,620px);min-height:460px}.brief{padding:20px}.brief h1{font-size:42px}.orders{grid-template-columns:1fr}.order:nth-child(4){display:none}.desktop-copy{display:none}.touch-copy{display:inline}.side{margin-top:0;padding:13px}.side h2{font-size:20px}.level-list{grid-template-columns:repeat(2,1fr)}.command-btn{min-width:62px;padding:7px 6px;font-size:14px}.toast{width:max-content;max-width:calc(100% - 32px);white-space:normal;text-align:center;font-size:20px}}
+    @media(pointer:coarse){
+      html,body{height:100%;overflow:hidden}
+      body{padding:0;height:100vh;height:100dvh}
+      .shell{display:block;height:100vh;height:100dvh;width:100%;max-width:none;margin:0}
+      .game-wrap{height:100%;display:flex;flex-direction:column;border:0}
+      .topbar{flex:0 0 auto}
+      .arena{flex:1 1 auto;aspect-ratio:auto;min-height:0;max-height:none;height:auto}
+      .mobile-controls{display:block;pointer-events:none;z-index:10}
+      .stick,.fire{pointer-events:auto}
+      .desktop-copy{display:none}
+      .touch-copy{display:inline}
+      .keyrow{display:none}
+      .side{position:fixed;top:0;right:0;bottom:0;width:min(320px,85vw);margin:0;z-index:50;transform:translateX(105%);transition:transform .22s ease;overflow-y:auto;overscroll-behavior:contain;padding:17px max(17px,env(safe-area-inset-right)) 17px 17px}
+      body.side-open .side{transform:none}
+      .missions-toggle{display:block;min-width:44px;min-height:44px}
+      .pause{right:12px;top:12px;width:44px;height:44px;min-width:44px;min-height:44px}
+      .missions-toggle{right:64px;top:12px}
+      .command-btn{min-width:72px;min-height:44px}
+      .level-btn{min-height:44px}
+    }
+    @media(pointer:coarse) and (max-height:500px){
+      .overlay{padding:8px}
+      .brief{width:min(620px,100%);max-height:100%;padding:12px 16px}
+      .kicker{font-size:11px}
+      .brief h1{font-size:32px;line-height:.92;margin:4px 0 7px}
+      .brief p{font-size:13px;line-height:1.28;margin:0 0 8px}
+      .orders{grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+      .order{padding:5px 7px;font-size:11px}
+      .order b{font-size:14px;margin-bottom:1px}
+      .primary{min-height:44px;padding:8px 16px;font-size:18px}
+    }
     @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     #rotatePrompt{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(3,11,18,.96);padding:24px;text-align:center}
     #rotatePrompt[hidden]{display:none}
@@ -96,6 +128,7 @@
         <canvas id="game" aria-label="Zero-gravity laser-tag arena. Move, aim, and tag enemy soldiers."></canvas>
         <div class="scanlines"></div>
         <button class="pause" id="pauseBtn" aria-label="Pause game">Ⅱ</button>
+        <button class="missions-toggle" id="missionsBtn" type="button" aria-controls="missionPanel" aria-expanded="false">☰ Missions</button>
         <div class="command-deck" aria-label="Squad commands">
           <span class="command-label">Squad order</span>
           <button class="command-btn active" id="attackBtn" aria-pressed="true">Attack</button>
@@ -123,7 +156,7 @@
         </div>
       </div>
     </section>
-    <aside class="side">
+    <aside class="side" id="missionPanel">
       <h2>Battle &amp; Command School</h2>
       <div class="level-list" id="levelList"></div>
       <div class="intel"><strong>COMMANDER'S NOTE</strong><br>Enemy squads now screen their gate, intercept runners, flank exposed soldiers, dodge incoming fire, and lead moving targets. On the ice, hold the hidden squad until the Bugger ships commit. In the final mission, screen the Little Doctor through two coordinated armadas.</div>
@@ -151,7 +184,8 @@
   const arena=document.getElementById('arena'),overlay=document.getElementById('overlay');
   const title=document.getElementById('overlayTitle'),text=document.getElementById('overlayText'),kicker=document.getElementById('overlayKicker'),startBtn=document.getElementById('startBtn');
   const scoreEl=document.getElementById('score'),livesEl=document.getElementById('lives'),missionEl=document.getElementById('missionText'),toast=document.getElementById('toast'),rankEl=document.querySelector('.rank');
-  const levelList=document.getElementById('levelList'),attackBtn=document.getElementById('attackBtn'),defendBtn=document.getElementById('defendBtn'),doctorBtn=document.getElementById('doctorBtn');
+  const levelList=document.getElementById('levelList'),attackBtn=document.getElementById('attackBtn'),defendBtn=document.getElementById('defendBtn'),doctorBtn=document.getElementById('doctorBtn'),missionsBtn=document.getElementById('missionsBtn');
+  missionsBtn.addEventListener('click',()=>{const open=document.body.classList.toggle('side-open');missionsBtn.setAttribute('aria-expanded',String(open))});
   const levels=[
     {name:'Orientation',sub:'6 vs 8',type:'battle',allies:5,enemies:8,speed:.76,cover:7,enemyHp:1,aggression:.82,aim:.46},
     {name:'Hook Formation',sub:'7 vs 10',type:'battle',allies:6,enemies:10,speed:.88,cover:9,enemyHp:1,aggression:.92,aim:.55},
@@ -232,6 +266,7 @@
     }
   }
   function beginLevel(){
+    document.body.classList.remove('side-open');missionsBtn.setAttribute('aria-expanded','false');
     resize();reset();configureCommands();state='playing';overlay.classList.add('hidden');rankEl.innerHTML=(isCommand()?'COMMANDER ':'LAUNCHIE ')+'<span id="callsign">07</span>';
     if(L().type==='ice')missionEl.textContent='STEALTH BELOW THE ICE — FRONT FLEET FEINTS';
     else if(L().type==='fleet')missionEl.textContent='USE THE LITTLE DOCTOR TO BREAK THE ARMADA';
@@ -272,9 +307,10 @@
   window.addEventListener('keyup',e=>keys[e.code]=false);
   function mousePos(e){const r=canvas.getBoundingClientRect();pointer.x=e.clientX-r.left;pointer.y=e.clientY-r.top}
   canvas.addEventListener('pointermove',mousePos);canvas.addEventListener('pointerdown',e=>{mousePos(e);pointer.down=true;if(state==='playing')shoot(player)});window.addEventListener('pointerup',()=>pointer.down=false);
-  const stick=document.getElementById('stick'),nub=document.getElementById('nub');
+  const stick=document.getElementById('stick'),nub=document.getElementById('nub');let stickPointer=null;
   function stickMove(e){e.preventDefault();const r=stick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const m=Math.hypot(dx,dy),max=38;if(m>max){dx*=max/m;dy*=max/m}touchMove.x=dx/max;touchMove.y=dy/max;nub.style.transform=`translate(${dx}px,${dy}px)`}
-  stick.addEventListener('pointerdown',e=>{stick.setPointerCapture(e.pointerId);stickMove(e)});stick.addEventListener('pointermove',e=>e.buttons&&stickMove(e));stick.addEventListener('pointerup',()=>{touchMove.x=touchMove.y=0;nub.style.transform=''});
+  function releaseStick(e){if(stickPointer!==null&&e.pointerId!==stickPointer)return;stickPointer=null;touchMove.x=touchMove.y=0;nub.style.transform=''}
+  stick.addEventListener('pointerdown',e=>{stickPointer=e.pointerId;stick.setPointerCapture(e.pointerId);stickMove(e)});stick.addEventListener('pointermove',e=>e.pointerId===stickPointer&&stickMove(e));stick.addEventListener('pointerup',releaseStick);stick.addEventListener('pointercancel',releaseStick);stick.addEventListener('lostpointercapture',releaseStick);
   const fireBtn=document.getElementById('fireBtn');fireBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(state==='playing'){const target=nearestEnemy(player);if(target)player.angle=Math.atan2(target.y-player.y,target.x-player.x);shoot(player)}});
 
   function nearestEnemy(a){return actors.filter(x=>x.alive&&isHostile(x)).sort((x,y)=>dist(a,x)-dist(a,y))[0]}
